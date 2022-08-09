@@ -31,10 +31,13 @@ namespace Project
         bool normalAsAlbedo = true;
         int voxelDataSize = 256;
 
+        float sculptTick = 0;
+        float sculptTickSpeed = 20;
+
         public Window() : base(GameWindowSettings.Default, NativeWindowSettings.Default)
         {
             this.CenterWindow(new Vector2i(1280, 720));
-            Title = "Sjoerd's Voxel Engine - press left ctrl to edit settings";
+            Title = "Sjoerd's Voxel Engine";
         }
 
         protected override void OnResize(ResizeEventArgs args)
@@ -58,7 +61,7 @@ namespace Project
             camera.Yaw = 90;
 
             // set initial cursor state
-            CursorState = CursorState.Grabbed;
+            CursorState = CursorState.Normal;
 
             // setup imgui
             imgui = new ImGuiHelper(Size.X, Size.Y);
@@ -95,14 +98,18 @@ namespace Project
                 }
             }
             if (CursorState == CursorState.Normal) return;
-
-            // place voxels
-            var position = voxelData.VoxelTrace(camera.Position, -camera.Front, voxelTraceSteps);
-            if(mouse.IsButtonPressed(0)) voxelData.PlaceVoxelSphere(((Vector3i)position), 32, 1);
+            
+            // voxel sculpting
+            if (timePassed > sculptTick)
+            {
+                var position = voxelData.VoxelTrace(camera.Position, -camera.Front, voxelTraceSteps);
+                if(mouse.IsButtonDown(0)) voxelData.SculptVoxelData(((Vector3i)position), 32, 1);
+                sculptTick += (1 / sculptTickSpeed);
+            }
 
             // camera movement
             float cameraSpeed = 100f;
-            float sensitivity = 0.2f;
+            float sensitivity = 0.1f;
             if (input.IsKeyDown(Keys.W)) camera.Position -= camera.Front * cameraSpeed * (float)args.Time;
             if (input.IsKeyDown(Keys.S)) camera.Position += camera.Front * cameraSpeed * (float)args.Time;
             if (input.IsKeyDown(Keys.A)) camera.Position -= camera.Right * cameraSpeed * (float)args.Time;
@@ -131,10 +138,10 @@ namespace Project
             shader.Use();
 
             // setup imgui
+            ImGui.Text("fps: " + ImGui.GetIO().Framerate.ToString("#"));
+            ImGui.Text("frametime: " + args.Time.ToString("0.00#") + " ms");
             if (CursorState == CursorState.Normal)
             {
-                ImGui.Text("fps: " + ImGui.GetIO().Framerate.ToString("#"));
-                ImGui.Text("frametime: " + args.Time.ToString("0.00#") + " ms");
                 ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
                 ImGui.SetNextItemWidth(100); ImGui.SliderInt("voxel trace steps", ref voxelTraceSteps, 10, 1000);
             }

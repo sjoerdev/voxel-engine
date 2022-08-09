@@ -38,7 +38,7 @@ namespace Project
             return voxelTextureHandle;
         }
 
-        public void PlaceVoxelSphere(Vector3i position, int radius, float value)
+        public void SculptVoxelData(Vector3i position, int radius, float value)
         {
             GL.BindTexture(TextureTarget.Texture3D, voxelTextureHandle);
 
@@ -46,13 +46,24 @@ namespace Project
 
             position = position - Vector3i.One * radius / 2;
 
+            List<Vector3i> voxelsToChange = new List<Vector3i>();
+
             for (int x = 0; x < radius; x++)
             {
                 for (int y = 0; y < radius; y++)
                 {
                     for (int z = 0; z < radius; z++)
                     {
-                        if (IsInBounds(position + new Vector3(x, y, z), rawData))
+                        bool isInBounds = 
+                        IsInBounds(position + new Vector3(x, y, z), rawData) &&
+                        IsInBounds(position + new Vector3(x + 1, y, z), rawData) &&
+                        IsInBounds(position + new Vector3(x - 1, y, z), rawData) &&
+                        IsInBounds(position + new Vector3(x, y + 1, z), rawData) &&
+                        IsInBounds(position + new Vector3(x, y - 1, z), rawData) &&
+                        IsInBounds(position + new Vector3(x, y, z + 1), rawData) &&
+                        IsInBounds(position + new Vector3(x, y, z - 1), rawData);
+
+                        if (isInBounds)
                         {
                             Vector3i localCoord = new Vector3i(x, y, z);
                             Vector3i worldCoord = position + localCoord;
@@ -61,15 +72,30 @@ namespace Project
 
                             float currentWorldSpaceValue = rawData[worldCoord.X, worldCoord.Y, worldCoord.Z];
 
-                            float newValue = currentWorldSpaceValue;
+                            bool isSurface = 
+                            rawData[worldCoord.X + 1, worldCoord.Y, worldCoord.Z] == 1 || 
+                            rawData[worldCoord.X - 1, worldCoord.Y, worldCoord.Z] == 1 ||
+                            rawData[worldCoord.X, worldCoord.Y + 1, worldCoord.Z] == 1 ||
+                            rawData[worldCoord.X, worldCoord.Y - 1, worldCoord.Z] == 1 ||
+                            rawData[worldCoord.X, worldCoord.Y, worldCoord.Z + 1] == 1 ||
+                            rawData[worldCoord.X, worldCoord.Y, worldCoord.Z - 1] == 1;
 
-                            if (currentWorldSpaceValue == 0 && isInRadius) newValue = value;
+                            if (currentWorldSpaceValue == 0 && isInRadius && isSurface) voxelsToChange.Add(localCoord);
 
-                            newSubVoxelData[localCoord.Z, localCoord.Y, localCoord.X] = newValue;
-                            rawData[worldCoord.X, worldCoord.Y, worldCoord.Z] = newValue;
+                            newSubVoxelData[localCoord.Z, localCoord.Y, localCoord.X] = currentWorldSpaceValue;
+                            rawData[worldCoord.X, worldCoord.Y, worldCoord.Z] = currentWorldSpaceValue;
                         }
                     }
                 }
+            }
+            
+            for (int i = 0; i < voxelsToChange.Count; i++)
+            {
+                Vector3i localCoord = voxelsToChange[i];
+                Vector3i worldCoord = position + localCoord;
+
+                newSubVoxelData[localCoord.Z, localCoord.Y, localCoord.X] = value;
+                rawData[worldCoord.X, worldCoord.Y, worldCoord.Z] = value;
             }
 
             GL.TexSubImage3D(TextureTarget.Texture3D, 0, position.X, position.Y, position.Z, radius, radius, radius, PixelFormat.Red, PixelType.Float, newSubVoxelData);
