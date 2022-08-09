@@ -70,6 +70,7 @@ namespace Project
 
             // create voxel data
             voxelData = new VoxelData(voxelDataSize);
+            Serialization.SerializeVoxels("voxeldata", voxelData.rawData, new Vector3i(voxelDataSize, voxelDataSize, voxelDataSize));
         }
 
         protected override void OnUnload()

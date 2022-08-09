@@ -10,6 +10,12 @@ namespace Project
 
         public VoxelData(int size)
         {
+            CreateSphereData(size);
+            CreateVoxelTexture(size, rawData);
+        }
+
+        private void CreateSphereData(int size)
+        {
             rawData = new float[size, size, size];
             for (int x = 0; x < size; x++)
             {
@@ -22,12 +28,11 @@ namespace Project
                     }
                 }
             }
-            voxelTextureHandle = CreateVoxelTexture(size, rawData);
         }
 
-        private int CreateVoxelTexture(int size, float[,,] rawData)
+        private void CreateVoxelTexture(int size, float[,,] rawData)
         {
-            int voxelTextureHandle = GL.GenTexture();
+            voxelTextureHandle = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture3D, voxelTextureHandle);
             GL.TexImage3D(TextureTarget.Texture3D, 0, PixelInternalFormat.R32f, size, size, size, 0, PixelFormat.Red, PixelType.Float, rawData);
             GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
@@ -35,7 +40,6 @@ namespace Project
             GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToBorder);
             GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToBorder);
             GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureWrapR, (int)TextureWrapMode.ClampToBorder);
-            return voxelTextureHandle;
         }
 
         public void SculptVoxelData(Vector3i position, int radius, float value)
