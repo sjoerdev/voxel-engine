@@ -5,8 +5,6 @@ namespace Project
 {
     public static class Serialization
     {
-        //Flat[ x * height * depth + y * depth + z ] = elements[x][y][z]
-
         public static void SerializeVoxels(string fileName, float[,,] voxelData, Vector3i size)
         {
             float[] flat = Flatten(voxelData, size);
@@ -23,6 +21,7 @@ namespace Project
             return Expand(flat, size);
         }
 
+        // formula used: flat[ x * height * depth + y * depth + z ] = raw[x, y, z];
         private static float[] Flatten(float[,,] raw, Vector3i size)
         {
             int width = size.X;

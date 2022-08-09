@@ -65,12 +65,9 @@ namespace Project
 
             // setup imgui
             imgui = new ImGuiHelper(Size.X, Size.Y);
-            ImGui.SetWindowPos(new System.Numerics.Vector2(16, 16));
-            ImGui.SetWindowSize(new System.Numerics.Vector2(256, 128));
 
             // create voxel data
             voxelData = new VoxelData(voxelDataSize);
-            Serialization.SerializeVoxels("voxeldata", voxelData.rawData, new Vector3i(voxelDataSize, voxelDataSize, voxelDataSize));
         }
 
         protected override void OnUnload()
@@ -88,7 +85,7 @@ namespace Project
             if (!IsFocused) return;
 
             // set mouse mode
-            if(input.IsKeyPressed(Keys.LeftControl))
+            if (input.IsKeyPressed(Keys.LeftControl))
             {
                 if (CursorState == CursorState.Grabbed) CursorState = CursorState.Normal;
                 else if (CursorState == CursorState.Normal)
@@ -139,12 +136,17 @@ namespace Project
             shader.Use();
 
             // setup imgui
-            ImGui.Text("fps: " + ImGui.GetIO().Framerate.ToString("#"));
-            ImGui.Text("frametime: " + args.Time.ToString("0.00#") + " ms");
+            ImGui.SetWindowPos(new System.Numerics.Vector2(16, 16));
+            ImGui.SetWindowSize(new System.Numerics.Vector2(256, 256));
             if (CursorState == CursorState.Normal)
             {
+                ImGui.Text("fps: " + ImGui.GetIO().Framerate.ToString("#"));
+                ImGui.Text("frametime: " + args.Time.ToString("0.00#") + " ms");
                 ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
                 ImGui.SetNextItemWidth(100); ImGui.SliderInt("voxel trace steps", ref voxelTraceSteps, 10, 1000);
+                if (ImGui.Button("save", new System.Numerics.Vector2(128, 0))) voxelData.Save();
+                if (ImGui.Button("load", new System.Numerics.Vector2(128, 0))) voxelData.Load();
+                if (ImGui.Button("clear", new System.Numerics.Vector2(128, 0))) voxelData.LoadSphere();
             }
 
             // pass data to shader
