@@ -11,88 +11,16 @@ uniform float iTime;
 uniform bool normalAsAlbedo;
 uniform float sdfNormalPrecision;
 uniform int voxelTraceSteps;
-uniform int scale;
 
 uniform vec3 camPos;
 uniform mat4 view;
 
 uniform sampler3D data;
-
-float sphereSDF(vec3 pos, float scale)
-{
-    return length(pos) - scale;
-}
-
-float mandelbulbSDF(vec3 pos, float scale) 
-{
-    pos /= scale;
-
-    float power = 8;
-	vec3 z = pos;
-	float dr = 1.0;
-	float r = 0.0;
-
-	for (int i = 0; i < 7; i++)
-	{
-		r = length(z);
-		if (r > 2.0) break;
-		
-		// convert to polar coordinates
-		float theta = acos(z.z / r);
-		float phi = atan(z.y, z.x);
-
-		dr = pow(r, power - 1.0) * power * dr + 1.0;
-		
-		// scale and rotate the point
-		float zr = pow(r, power);
-		theta = theta * power;
-		phi = phi * power;
-		
-		// convert back to cartesian coordinates
-		z = zr * vec3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta));
-        
-        z += pos;
-	}
-	return 0.5 * log(r) * r / dr;
-}
-
-float mandelbrot3dSDF(vec3 pos, float scale) 
-{
-    pos /= scale;
-
-    float power = 2;
-	vec3 z = pos;
-	float dr = 1.0;
-	float r = 0.0;
-
-	for (int i = 0; i < 7; i++)
-	{
-		r = length(z);
-		if (r > 2.0) break;
-		
-		// convert to polar coordinates
-        float theta = asin(z.z / r);
-        float phi = atan(z.y, z.x);
-
-		dr = pow(r, power - 1.0) * power * dr + 1.0;
-		
-		// scale and rotate the point
-		float zr = pow(r, power);
-		theta = theta * power;
-		phi = phi * power;
-		
-		// convert back to cartesian coordinates
-		z = zr * vec3(cos(theta) * cos(phi), cos(theta) * sin(phi), sin(theta));
-        
-        z += pos;
-	}
-	return 0.5 * log(r) * r / dr;
-}
-
+uniform vec3 dataSize;
 
 float Sample(vec3 pos)
 {
-    float value = texture(data, pos / scale).r;
+    float value = texture(data, pos / dataSize).r;
     return value;
 }
 

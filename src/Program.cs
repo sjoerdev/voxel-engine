@@ -29,10 +29,10 @@ namespace Project
 
         int voxelTraceSteps = 1024;
         bool normalAsAlbedo = true;
-        int voxelDataSize = 256;
+        Vector3i dataSize = new Vector3i(256, 256, 256); // this value should not change between serializing and deserializing
 
         float sculptTick = 0;
-        float sculptTickSpeed = 20;
+        float sculptTickSpeed = 60;
 
         public Window() : base(GameWindowSettings.Default, NativeWindowSettings.Default)
         {
@@ -56,7 +56,7 @@ namespace Project
             shader = new Shader("res/shader.vert", "res/shader.frag");
 
             // setup camera
-            var pos = new Vector3(voxelDataSize / 2, voxelDataSize / 2, voxelDataSize * 2);
+            var pos = new Vector3(dataSize.X / 2, dataSize.Y / 2, dataSize.Z * 2);
             camera = new Camera(pos, Size.X / Size.Y);
             camera.Yaw = 90;
 
@@ -67,7 +67,7 @@ namespace Project
             imgui = new ImGuiHelper(Size.X, Size.Y);
 
             // create voxel data
-            voxelData = new VoxelData(voxelDataSize);
+            voxelData = new VoxelData(dataSize);
         }
 
         protected override void OnUnload()
@@ -150,11 +150,11 @@ namespace Project
             }
 
             // pass data to shader
-            shader.SetVector2i("resolution", Size);
+            shader.SetVector2("resolution", ((Vector2)Size));
             shader.SetFloat("iTime", timePassed);
             shader.SetBool("normalAsAlbedo", normalAsAlbedo);
             shader.SetInt("voxelTraceSteps", voxelTraceSteps);
-            shader.SetInt("scale", voxelDataSize);
+            shader.SetVector3("dataSize", ((Vector3)dataSize));
             shader.SetCamera(camera, "view", "camPos");
             shader.SetVoxelData(voxelData, "data");
 

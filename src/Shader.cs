@@ -86,9 +86,14 @@ namespace Project
             GL.Uniform1(GL.GetUniformLocation(handle, name), value ? 1 : 0);
         }
 
-        public void SetVector2i(string name, Vector2i value)
+        public void SetVector2(string name, Vector2 value)
         {
-            GL.Uniform2(GL.GetUniformLocation(handle, name), (float)value.X, (float)value.Y);
+            GL.Uniform2(GL.GetUniformLocation(handle, name), value.X, value.Y);
+        }
+
+        public void SetVector3(string name, Vector3 value)
+        {
+            GL.Uniform3(GL.GetUniformLocation(handle, name), value.X, value.Y, value.Z);
         }
 
         public void SetCamera(Camera camera, string viewMatrixName, string cameraPositionName)

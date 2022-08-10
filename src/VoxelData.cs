@@ -7,36 +7,35 @@ namespace Project
     {
         public float[,,] rawData;
         public int voxelTextureHandle;
-        public int size;
+        public Vector3i dataSize;
 
-        public VoxelData(int size)
+        public VoxelData(Vector3i dataSize)
         {
-            this.size = size;
-
+            this.dataSize = dataSize;
             LoadSphere();
         }
 
         public void Save()
         {
-            Serialization.SerializeVoxels("voxeldata", rawData, Vector3i.One * size);
+            Serialization.SerializeVoxels("voxeldata", rawData, dataSize);
         }
 
         public void Load()
         {
-            rawData = Serialization.DeserializeVoxels("voxeldata", Vector3i.One * size);
+            rawData = Serialization.DeserializeVoxels("voxeldata", dataSize);
             GenTexture();
         }
 
         public void LoadSphere()
         {
-            float[,,] sphere = new float[size, size, size];
-            for (int x = 0; x < size; x++)
+            float[,,] sphere = new float[dataSize.X, dataSize.Y, dataSize.Z];
+            for (int x = 0; x < dataSize.X; x++)
             {
-                for (int y = 0; y < size; y++)
+                for (int y = 0; y < dataSize.Y; y++)
                 {
-                    for (int z = 0; z < size; z++)
+                    for (int z = 0; z < dataSize.Z; z++)
                     {
-                        if (Vector3.Distance(new Vector3(x, y, z), (new Vector3(size, size, size) / 2)) < (size / 4)) sphere[x, y, z] = 1;
+                        if (Vector3.Distance(new Vector3(x, y, z), (new Vector3(dataSize.X, dataSize.Y, dataSize.Z) / 2)) < 64) sphere[x, y, z] = 1;
                         else sphere[x, y, z] = 0;
                     }
                 }
@@ -48,12 +47,12 @@ namespace Project
         public void GenTexture()
         {
             // rotate data (dont know why this is needed, but whatever, it works)
-            float[,,] rotated = new float[size, size, size];
-            for (int x = 0; x < size; x++)
+            float[,,] rotated = new float[dataSize.Z, dataSize.Y, dataSize.X];
+            for (int x = 0; x < dataSize.X; x++)
             {
-                for (int y = 0; y < size; y++)
+                for (int y = 0; y < dataSize.Y; y++)
                 {
-                    for (int z = 0; z < size; z++)
+                    for (int z = 0; z < dataSize.Z; z++)
                     {
                         rotated[z, y, x] = rawData[x, y, z];
                     }
@@ -62,7 +61,7 @@ namespace Project
 
             voxelTextureHandle = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture3D, voxelTextureHandle);
-            GL.TexImage3D(TextureTarget.Texture3D, 0, PixelInternalFormat.R32f, size, size, size, 0, PixelFormat.Red, PixelType.Float, rotated);
+            GL.TexImage3D(TextureTarget.Texture3D, 0, PixelInternalFormat.R32f, dataSize.X, dataSize.Y, dataSize.Z, 0, PixelFormat.Red, PixelType.Float, rotated);
             GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToBorder);
