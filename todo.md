@@ -7,6 +7,7 @@
 - gl error checking
 - add a cool shader crosshair
 - add hue picker for voxel editing
+- voxel removal
 
 # ideas
 - i could make this engine into a voxel sculpting tool
