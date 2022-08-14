@@ -5,7 +5,8 @@
 - exporting to .vox
 - frametime graph in imgui
 - gl error checking
-- add a could shader crosshair
+- add a cool shader crosshair
+- add hue picker for voxel editing
 
 # ideas
 - i could make this engine into a voxel sculpting tool
