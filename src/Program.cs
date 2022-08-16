@@ -28,7 +28,8 @@ namespace Project
         private VoxelData voxelData;
 
         int voxelTraceSteps = 1024;
-        bool normalAsAlbedo = true;
+        bool normalAsAlbedo = false;
+        float hue = 0.5f;
         Vector3i dataSize = new Vector3i(256, 256, 256); // this value should not change between serializing and deserializing
 
         float sculptTick = 0;
@@ -101,7 +102,7 @@ namespace Project
             if (timePassed > sculptTick)
             {
                 var position = voxelData.VoxelTrace(camera.Position, -camera.Front, voxelTraceSteps);
-                if(mouse.IsButtonDown(0)) voxelData.SculptVoxelData(((Vector3i)position), 32, 1);
+                if(mouse.IsButtonDown(0)) voxelData.SculptVoxelData(((Vector3i)position), 32, hue);
                 sculptTick += (1 / sculptTickSpeed);
             }
 
@@ -140,10 +141,21 @@ namespace Project
             ImGui.SetWindowSize(new System.Numerics.Vector2(256, 256));
             if (CursorState == CursorState.Normal)
             {
+                // metrics
                 ImGui.Text("fps: " + ImGui.GetIO().Framerate.ToString("#"));
                 ImGui.Text("frametime: " + args.Time.ToString("0.00#") + " ms");
+
+                // brush color
+                System.Numerics.Vector4 brushColor = new System.Numerics.Vector4();
+                ImGui.ColorConvertHSVtoRGB(hue, 1, 1, out brushColor.X, out brushColor.Y, out brushColor.Z);
+                ImGui.ColorButton("current brush color", brushColor);
+                ImGui.SliderFloat("hue", ref hue, 0.001f, 1);
+
+                // other
                 ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
                 ImGui.SetNextItemWidth(100); ImGui.SliderInt("voxel trace steps", ref voxelTraceSteps, 10, 1000);
+
+                // serialization
                 if (ImGui.Button("save", new System.Numerics.Vector2(128, 0))) voxelData.Save();
                 if (ImGui.Button("load", new System.Numerics.Vector2(128, 0))) voxelData.Load();
                 if (ImGui.Button("clear", new System.Numerics.Vector2(128, 0))) voxelData.LoadSphere();

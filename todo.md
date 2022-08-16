@@ -6,7 +6,6 @@
 - frametime graph in imgui
 - gl error checking
 - add a cool shader crosshair
-- add hue picker for voxel editing
 - voxel removal
 
 # ideas

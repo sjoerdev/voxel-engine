@@ -35,7 +35,7 @@ namespace Project
                 {
                     for (int z = 0; z < dataSize.Z; z++)
                     {
-                        if (Vector3.Distance(new Vector3(x, y, z), (new Vector3(dataSize.X, dataSize.Y, dataSize.Z) / 2)) < 64) sphere[x, y, z] = 1;
+                        if (Vector3.Distance(new Vector3(x, y, z), (new Vector3(dataSize.X, dataSize.Y, dataSize.Z) / 2)) < 64) sphere[x, y, z] = 0.6f;
                         else sphere[x, y, z] = 0;
                     }
                 }
@@ -104,12 +104,12 @@ namespace Project
                             float currentWorldSpaceValue = rawData[worldCoord.X, worldCoord.Y, worldCoord.Z];
 
                             bool isSurface = 
-                            rawData[worldCoord.X + 1, worldCoord.Y, worldCoord.Z] == 1 || 
-                            rawData[worldCoord.X - 1, worldCoord.Y, worldCoord.Z] == 1 ||
-                            rawData[worldCoord.X, worldCoord.Y + 1, worldCoord.Z] == 1 ||
-                            rawData[worldCoord.X, worldCoord.Y - 1, worldCoord.Z] == 1 ||
-                            rawData[worldCoord.X, worldCoord.Y, worldCoord.Z + 1] == 1 ||
-                            rawData[worldCoord.X, worldCoord.Y, worldCoord.Z - 1] == 1;
+                            rawData[worldCoord.X + 1, worldCoord.Y, worldCoord.Z] > 0 || 
+                            rawData[worldCoord.X - 1, worldCoord.Y, worldCoord.Z] > 0 ||
+                            rawData[worldCoord.X, worldCoord.Y + 1, worldCoord.Z] > 0 ||
+                            rawData[worldCoord.X, worldCoord.Y - 1, worldCoord.Z] > 0 ||
+                            rawData[worldCoord.X, worldCoord.Y, worldCoord.Z + 1] > 0 ||
+                            rawData[worldCoord.X, worldCoord.Y, worldCoord.Z - 1] > 0;
 
                             if (currentWorldSpaceValue == 0 && isInRadius && isSurface) voxelsToChange.Add(localCoord);
 
