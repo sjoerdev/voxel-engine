@@ -33,7 +33,7 @@ namespace Project
         Vector3i dataSize = new Vector3i(256, 256, 256); // this value should not change between serializing and deserializing
 
         float sculptTick = 0;
-        float sculptTickSpeed = 60;
+        float sculptTickSpeed = 30;
 
         public Window() : base(GameWindowSettings.Default, NativeWindowSettings.Default)
         {
