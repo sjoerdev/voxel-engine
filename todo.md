@@ -3,7 +3,6 @@
 
 # features
 - exporting to .vox
-- frametime graph in imgui
 - gl error checking
 
 # not important features

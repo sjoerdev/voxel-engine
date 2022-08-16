@@ -19,6 +19,7 @@ namespace Project
     {
         ImGuiHelper imgui;
         private float timePassed;
+        private List<float> frametimes = new List<float>();
         
         private bool firstMouseMovement = true;
         private Vector2 lastMousePos;
@@ -136,6 +137,7 @@ namespace Project
             base.OnRenderFrame(args);
             imgui.Update(this, (float)args.Time);
             shader.Use();
+            frametimes.Add(((float)args.Time));
 
             // setup imgui
             ImGui.SetWindowPos(new System.Numerics.Vector2(16, 16));
@@ -144,7 +146,10 @@ namespace Project
             {
                 // metrics
                 ImGui.Text("fps: " + ImGui.GetIO().Framerate.ToString("#"));
-                ImGui.Text("frametime: " + args.Time.ToString("0.00#") + " ms");
+                int amount = 128;
+                int startingPoint = frametimes.Count < amount ? 0 : frametimes.Count - amount;
+                int size = frametimes.Count < amount ? frametimes.Count : amount;
+                ImGui.PlotLines("", ref frametimes.ToArray()[startingPoint], size, 0, "", 0.002f, 0.033f);
 
                 // hue slider
                 System.Numerics.Vector4 hueSliderColor = new System.Numerics.Vector4();
