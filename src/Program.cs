@@ -62,9 +62,6 @@ namespace Project
             camera = new Camera(pos, Size.X / Size.Y);
             camera.Yaw = 90;
 
-            // set initial cursor state
-            CursorState = CursorState.Normal;
-
             // setup imgui
             imgui = new ImGuiHelper(Size.X, Size.Y);
 
@@ -86,29 +83,22 @@ namespace Project
             var input = KeyboardState;
             if (!IsFocused) return;
 
-            // set mouse mode
-            if (input.IsKeyPressed(Keys.LeftControl))
-            {
-                if (CursorState == CursorState.Grabbed) CursorState = CursorState.Normal;
-                else if (CursorState == CursorState.Normal)
-                {
-                    CursorState = CursorState.Grabbed;
-                    firstMouseMovement = true;
-                    return;
-                }
-            }
-            if (CursorState == CursorState.Normal) return;
-            
             // voxel sculpting
             if (timePassed > sculptTick)
             {
-                var position = voxelData.VoxelTrace(camera.Position, -camera.Front, voxelTraceSteps);
+                var ndc = (mouse.Position / Size) - new Vector2(0.5f, 0.5f);
+                float aspect = (float)Size.X / (float)Size.Y;
+                var uv = ndc * new Vector2(aspect, 1);
+                Vector3 dir = (camera.GetViewMatrix() * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
+
+                var position = voxelData.VoxelTrace(camera.Position, dir, voxelTraceSteps);
                 if(mouse.IsButtonDown(MouseButton.Left)) voxelData.SculptVoxelData(((Vector3i)position), 32, hue);
                 else if(mouse.IsButtonDown(MouseButton.Right)) voxelData.SculptVoxelData(((Vector3i)position), 32, 0);
                 sculptTick += (1 / sculptTickSpeed);
             }
 
             // camera movement
+            /*
             float cameraSpeed = 100f;
             float sensitivity = 0.1f;
             if (input.IsKeyDown(Keys.W)) camera.Position -= camera.Front * cameraSpeed * (float)args.Time;
@@ -130,6 +120,7 @@ namespace Project
                 camera.Yaw -= deltaX * sensitivity;
                 camera.Pitch += deltaY * sensitivity;
             }
+            */
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
@@ -142,34 +133,32 @@ namespace Project
             // setup imgui
             ImGui.SetWindowPos(new System.Numerics.Vector2(16, 16));
             ImGui.SetWindowSize(new System.Numerics.Vector2(256, 256));
-            if (CursorState == CursorState.Normal)
-            {
-                // metrics
-                ImGui.Text("fps: " + ImGui.GetIO().Framerate.ToString("#"));
-                int amount = 128;
-                int startingPoint = frametimes.Count < amount ? 0 : frametimes.Count - amount;
-                int size = frametimes.Count < amount ? frametimes.Count : amount;
-                ImGui.PlotLines("", ref frametimes.ToArray()[startingPoint], size, 0, "", 0.002f, 0.033f);
 
-                // hue slider
-                System.Numerics.Vector4 hueSliderColor = new System.Numerics.Vector4();
-                ImGui.ColorConvertHSVtoRGB(hue, 1, 0.5f, out hueSliderColor.X, out hueSliderColor.Y, out hueSliderColor.Z);
-                hueSliderColor.W = 1;
-                ImGui.PushStyleColor(ImGuiCol.FrameBg, hueSliderColor);
-                ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, hueSliderColor);
-                ImGui.PushStyleColor(ImGuiCol.FrameBgActive, hueSliderColor);
-                ImGui.SliderFloat("hue", ref hue, 0.001f, 1);
-                ImGui.StyleColorsDark();
+            // metrics
+            ImGui.Text("fps: " + ImGui.GetIO().Framerate.ToString("#"));
+            int amount = 128;
+            int startingPoint = frametimes.Count < amount ? 0 : frametimes.Count - amount;
+            int size = frametimes.Count < amount ? frametimes.Count : amount;
+            ImGui.PlotLines("", ref frametimes.ToArray()[startingPoint], size, 0, "", 0.002f, 0.033f);
 
-                // other
-                ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
-                ImGui.SetNextItemWidth(100); ImGui.SliderInt("voxel trace steps", ref voxelTraceSteps, 10, 1000);
+            // hue slider
+            System.Numerics.Vector4 hueSliderColor = new System.Numerics.Vector4();
+            ImGui.ColorConvertHSVtoRGB(hue, 1, 0.5f, out hueSliderColor.X, out hueSliderColor.Y, out hueSliderColor.Z);
+            hueSliderColor.W = 1;
+            ImGui.PushStyleColor(ImGuiCol.FrameBg, hueSliderColor);
+            ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, hueSliderColor);
+            ImGui.PushStyleColor(ImGuiCol.FrameBgActive, hueSliderColor);
+            ImGui.SliderFloat("hue", ref hue, 0.001f, 1);
+            ImGui.StyleColorsDark();
 
-                // serialization
-                if (ImGui.Button("save", new System.Numerics.Vector2(128, 0))) voxelData.Save();
-                if (ImGui.Button("load", new System.Numerics.Vector2(128, 0))) voxelData.Load();
-                if (ImGui.Button("clear", new System.Numerics.Vector2(128, 0))) voxelData.LoadSphere();
-            }
+            // other
+            ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
+            ImGui.SetNextItemWidth(100); ImGui.SliderInt("voxel trace steps", ref voxelTraceSteps, 10, 1000);
+
+            // serialization
+            if (ImGui.Button("save", new System.Numerics.Vector2(128, 0))) voxelData.Save();
+            if (ImGui.Button("load", new System.Numerics.Vector2(128, 0))) voxelData.Load();
+            if (ImGui.Button("clear", new System.Numerics.Vector2(128, 0))) voxelData.LoadSphere();
 
             // pass data to shader
             shader.SetVector2("resolution", ((Vector2)Size));

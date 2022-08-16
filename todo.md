@@ -2,6 +2,7 @@
 - fix sculpting subtex overlapping issue near borders
 
 # features
+- change camera to rotate around sculpture and remove mouse modes
 - exporting to .vox
 - gl error checking
 

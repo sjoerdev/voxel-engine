@@ -167,13 +167,6 @@ void main()
     // calc uv from ndc
     vec2 uv = ndc * normalize(resolution);
 
-    // hardcoded crosshair
-    if (distance(uv, vec2(0, 0)) < 0.01)
-    {
-        fragColor = vec4(1, 1, 1, 1);
-        return;
-    }
-
     // camera
     vec3 eye = camPos;
     vec3 dir = (view * vec4(uv * 1, 1, 1)).xyz;
