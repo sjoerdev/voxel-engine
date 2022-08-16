@@ -2,7 +2,6 @@
 - fix sculpting subtex overlapping issue near borders
 
 # features
-- voxel removal
 - exporting to .vox
 - frametime graph in imgui
 - gl error checking
