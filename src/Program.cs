@@ -29,7 +29,7 @@ namespace Project
 
         int voxelTraceSteps = 1024;
         bool normalAsAlbedo = false;
-        float hue = 0.5f;
+        float hue = 0.001f;
         Vector3i dataSize = new Vector3i(256, 256, 256); // this value should not change between serializing and deserializing
 
         float sculptTick = 0;
@@ -146,11 +146,15 @@ namespace Project
                 ImGui.Text("fps: " + ImGui.GetIO().Framerate.ToString("#"));
                 ImGui.Text("frametime: " + args.Time.ToString("0.00#") + " ms");
 
-                // brush color
-                System.Numerics.Vector4 brushColor = new System.Numerics.Vector4();
-                ImGui.ColorConvertHSVtoRGB(hue, 1, 1, out brushColor.X, out brushColor.Y, out brushColor.Z);
-                ImGui.ColorButton("current brush color", brushColor);
+                // hue slider
+                System.Numerics.Vector4 hueSliderColor = new System.Numerics.Vector4();
+                ImGui.ColorConvertHSVtoRGB(hue, 1, 0.5f, out hueSliderColor.X, out hueSliderColor.Y, out hueSliderColor.Z);
+                hueSliderColor.W = 1;
+                ImGui.PushStyleColor(ImGuiCol.FrameBg, hueSliderColor);
+                ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, hueSliderColor);
+                ImGui.PushStyleColor(ImGuiCol.FrameBgActive, hueSliderColor);
                 ImGui.SliderFloat("hue", ref hue, 0.001f, 1);
+                ImGui.StyleColorsDark();
 
                 // other
                 ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);

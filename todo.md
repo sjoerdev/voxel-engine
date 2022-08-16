@@ -5,7 +5,9 @@
 - exporting to .vox
 - frametime graph in imgui
 - gl error checking
-- add a cool shader crosshair
+
+# not important features
+- add a cool shader crosshair (like color, size and transparency)
 
 # ideas
 - i could make this engine into a voxel sculpting tool
