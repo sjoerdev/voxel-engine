@@ -102,7 +102,8 @@ namespace Project
             if (timePassed > sculptTick)
             {
                 var position = voxelData.VoxelTrace(camera.Position, -camera.Front, voxelTraceSteps);
-                if(mouse.IsButtonDown(0)) voxelData.SculptVoxelData(((Vector3i)position), 32, hue);
+                if(mouse.IsButtonDown(MouseButton.Left)) voxelData.SculptVoxelData(((Vector3i)position), 32, hue);
+                else if(mouse.IsButtonDown(MouseButton.Right)) voxelData.SculptVoxelData(((Vector3i)position), 32, 0);
                 sculptTick += (1 / sculptTickSpeed);
             }
 

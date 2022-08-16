@@ -69,6 +69,7 @@ namespace Project
             GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureWrapR, (int)TextureWrapMode.ClampToBorder);
         }
 
+        // voxel sculpting, if value == 0, instead of adding voxels you will remove them
         public void SculptVoxelData(Vector3i position, int radius, float value)
         {
             GL.BindTexture(TextureTarget.Texture3D, voxelTextureHandle);
@@ -103,15 +104,30 @@ namespace Project
 
                             float currentWorldSpaceValue = rawData[worldCoord.X, worldCoord.Y, worldCoord.Z];
 
-                            bool isSurface = 
-                            rawData[worldCoord.X + 1, worldCoord.Y, worldCoord.Z] > 0 || 
-                            rawData[worldCoord.X - 1, worldCoord.Y, worldCoord.Z] > 0 ||
-                            rawData[worldCoord.X, worldCoord.Y + 1, worldCoord.Z] > 0 ||
-                            rawData[worldCoord.X, worldCoord.Y - 1, worldCoord.Z] > 0 ||
-                            rawData[worldCoord.X, worldCoord.Y, worldCoord.Z + 1] > 0 ||
-                            rawData[worldCoord.X, worldCoord.Y, worldCoord.Z - 1] > 0;
+                            if (value > 0)
+                            {
+                                bool isOnSurface = 
+                                rawData[worldCoord.X + 1, worldCoord.Y, worldCoord.Z] > 0 || 
+                                rawData[worldCoord.X - 1, worldCoord.Y, worldCoord.Z] > 0 ||
+                                rawData[worldCoord.X, worldCoord.Y + 1, worldCoord.Z] > 0 ||
+                                rawData[worldCoord.X, worldCoord.Y - 1, worldCoord.Z] > 0 ||
+                                rawData[worldCoord.X, worldCoord.Y, worldCoord.Z + 1] > 0 ||
+                                rawData[worldCoord.X, worldCoord.Y, worldCoord.Z - 1] > 0;
 
-                            if (currentWorldSpaceValue == 0 && isInRadius && isSurface) voxelsToChange.Add(localCoord);
+                                if (currentWorldSpaceValue == 0 && isInRadius && isOnSurface) voxelsToChange.Add(localCoord);
+                            }
+                            else
+                            {
+                                bool isSurface = 
+                                rawData[worldCoord.X + 1, worldCoord.Y, worldCoord.Z] == 0 || 
+                                rawData[worldCoord.X - 1, worldCoord.Y, worldCoord.Z] == 0 ||
+                                rawData[worldCoord.X, worldCoord.Y + 1, worldCoord.Z] == 0 ||
+                                rawData[worldCoord.X, worldCoord.Y - 1, worldCoord.Z] == 0 ||
+                                rawData[worldCoord.X, worldCoord.Y, worldCoord.Z + 1] == 0 ||
+                                rawData[worldCoord.X, worldCoord.Y, worldCoord.Z - 1] == 0;
+
+                                if (currentWorldSpaceValue > 0 && isInRadius && isSurface) voxelsToChange.Add(localCoord);
+                            }
 
                             newSubVoxelData[localCoord.Z, localCoord.Y, localCoord.X] = currentWorldSpaceValue;
                             rawData[worldCoord.X, worldCoord.Y, worldCoord.Z] = currentWorldSpaceValue;
