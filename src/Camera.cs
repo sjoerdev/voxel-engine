@@ -22,30 +22,6 @@ namespace Project
 
         public Vector3 Position { get; set; }
         public float AspectRatio { private get; set; }
-        public Vector3 Front => front;
-        public Vector3 Up => up;
-        public Vector3 Right => right;
-
-        public float Pitch
-        {
-            get => MathHelper.RadiansToDegrees(pitch);
-            set
-            {
-                var angle = MathHelper.Clamp(value, -89f, 89f);
-                pitch = MathHelper.DegreesToRadians(angle);
-                UpdateVectors();
-            }
-        }
-
-        public float Yaw
-        {
-            get => MathHelper.RadiansToDegrees(yaw);
-            set
-            {
-                yaw = MathHelper.DegreesToRadians(value);
-                UpdateVectors();
-            }
-        }
 
         public float Fov
         {
@@ -75,6 +51,15 @@ namespace Project
             front = Vector3.Normalize(front);
             right = Vector3.Normalize(Vector3.Cross(front, Vector3.UnitY));
             up = Vector3.Normalize(Vector3.Cross(right, front));
+        }
+
+        public void RotateAround(Vector3 target, Vector2 rotation, float offset)
+        {
+            yaw = rotation.X + MathHelper.DegreesToRadians(90);
+            pitch = rotation.Y;
+            
+            UpdateVectors();
+            Position = target + front * offset;
         }
     }
 }

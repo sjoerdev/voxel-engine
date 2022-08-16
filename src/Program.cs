@@ -23,6 +23,8 @@ namespace Project
         
         private bool firstMouseMovement = true;
         private Vector2 lastMousePos;
+        private Vector2 camOrbitRotation;
+        private float cameraDistance = 200;
 
         private Camera camera;
         private Shader shader;
@@ -30,6 +32,7 @@ namespace Project
 
         int voxelTraceSteps = 1024;
         bool normalAsAlbedo = false;
+        int currentBrushType = 0;
         float hue = 0.001f;
         Vector3i dataSize = new Vector3i(256, 256, 256); // this value should not change between serializing and deserializing
 
@@ -60,7 +63,6 @@ namespace Project
             // setup camera
             var pos = new Vector3(dataSize.X / 2, dataSize.Y / 2, dataSize.Z * 2);
             camera = new Camera(pos, Size.X / Size.Y);
-            camera.Yaw = 90;
 
             // setup imgui
             imgui = new ImGuiHelper(Size.X, Size.Y);
@@ -92,35 +94,26 @@ namespace Project
                 Vector3 dir = (camera.GetViewMatrix() * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
 
                 var position = voxelData.VoxelTrace(camera.Position, dir, voxelTraceSteps);
-                if(mouse.IsButtonDown(MouseButton.Left)) voxelData.SculptVoxelData(((Vector3i)position), 32, hue);
-                else if(mouse.IsButtonDown(MouseButton.Right)) voxelData.SculptVoxelData(((Vector3i)position), 32, 0);
+                if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxelData.SculptVoxelData(((Vector3i)position), 32, hue);
+                if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxelData.SculptVoxelData(((Vector3i)position), 32, 0);
                 sculptTick += (1 / sculptTickSpeed);
             }
 
-            // camera movement
-            /*
-            float cameraSpeed = 100f;
-            float sensitivity = 0.1f;
-            if (input.IsKeyDown(Keys.W)) camera.Position -= camera.Front * cameraSpeed * (float)args.Time;
-            if (input.IsKeyDown(Keys.S)) camera.Position += camera.Front * cameraSpeed * (float)args.Time;
-            if (input.IsKeyDown(Keys.A)) camera.Position -= camera.Right * cameraSpeed * (float)args.Time;
-            if (input.IsKeyDown(Keys.D)) camera.Position += camera.Right * cameraSpeed * (float)args.Time;
-            if (input.IsKeyDown(Keys.Space)) camera.Position += camera.Up * cameraSpeed * (float)args.Time;
-            if (input.IsKeyDown(Keys.LeftShift)) camera.Position -= camera.Up * cameraSpeed * (float)args.Time;
+            // camera orbit movement
             if (firstMouseMovement)
             {
-                lastMousePos = new Vector2(mouse.X, mouse.Y);
                 firstMouseMovement = false;
             }
-            else
+            else if (mouse.IsButtonDown(MouseButton.Right))
             {
-                var deltaX = mouse.X - lastMousePos.X;
-                var deltaY = mouse.Y - lastMousePos.Y;
-                lastMousePos = new Vector2(mouse.X, mouse.Y);
-                camera.Yaw -= deltaX * sensitivity;
-                camera.Pitch += deltaY * sensitivity;
+                Vector2 mouseDelta = new Vector2(-(mouse.X - lastMousePos.X), mouse.Y - lastMousePos.Y);
+                camOrbitRotation += mouseDelta / 500;
+                if (camOrbitRotation.Y > MathHelper.DegreesToRadians(89)) camOrbitRotation.Y = MathHelper.DegreesToRadians(89);
+                if (camOrbitRotation.Y < MathHelper.DegreesToRadians(-89)) camOrbitRotation.Y = MathHelper.DegreesToRadians(-89);
             }
-            */
+            lastMousePos = new Vector2(mouse.X, mouse.Y);
+            cameraDistance -= mouse.ScrollDelta.Y * 10;
+            camera.RotateAround(dataSize / 2, camOrbitRotation, cameraDistance);
         }
 
         protected override void OnRenderFrame(FrameEventArgs args)
@@ -140,6 +133,10 @@ namespace Project
             int startingPoint = frametimes.Count < amount ? 0 : frametimes.Count - amount;
             int size = frametimes.Count < amount ? frametimes.Count : amount;
             ImGui.PlotLines("", ref frametimes.ToArray()[startingPoint], size, 0, "", 0.002f, 0.033f);
+
+            // brush type
+            string[] items = new string[2]{"add voxels", "remove voxels"};
+            ImGui.Combo("brush type", ref currentBrushType, items, items.Length);
 
             // hue slider
             System.Numerics.Vector4 hueSliderColor = new System.Numerics.Vector4();
