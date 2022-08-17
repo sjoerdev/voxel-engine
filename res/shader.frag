@@ -182,9 +182,16 @@ void main()
     // calc normals
     normal = VoxelNormal(VoxelCoord);
 
+    // calc light pos
+    vec3 lightdir = vec3(1, 1, 1);
+    vec3 lightpos = normalize(lightdir * 10000);
+
     // calc diffuse
-    vec3 lightPos = vec3(4000, 4000, 4000);
-    float diffuse = max(0.3, dot(normalize(lightPos), normal));
+    float diffuse = max(0.3, dot(lightpos, normal));
+
+    // calc specular
+    vec3 specularcolor = vec3(0.5, 0.5, 0.5);
+    vec3 specular = pow(clamp(dot(lightpos, normal), 0.0, 1.0), 64.0) * specularcolor;
     
     // if nothing was hit
     if (VoxelCoord == vec3(0, 0, 0))
@@ -196,5 +203,5 @@ void main()
     if (normalAsAlbedo) albedo = (normal * 0.5 + 0.5);
     
     // return result
-    fragColor = vec4(albedo * diffuse, 1.0);
+    fragColor = vec4((albedo * diffuse) + specular, 1.0);
 }
