@@ -9,6 +9,7 @@ uniform vec2 resolution;
 uniform float iTime;
 
 uniform bool normalAsAlbedo;
+uniform bool visualizeSteps;
 uniform float sdfNormalPrecision;
 uniform int voxelTraceSteps;
 
@@ -56,7 +57,7 @@ bool isCoordOutsideCanvas(vec3 coord)
     else return false;
 }
 
-vec3 VoxelTrace(vec3 eye, vec3 marchingDirection)
+vec3 VoxelTrace(vec3 eye, vec3 marchingDirection, out int stepsTraced)
 {
     vec3 rayOrigin = eye;
     vec3 rayDirection = marchingDirection;
@@ -99,7 +100,7 @@ vec3 VoxelTrace(vec3 eye, vec3 marchingDirection)
 
     // initializing some variables
     float t = 0;
-    float stepsTraced = 0;
+    int steps = 0;
     vec3 cellIndex = floor(rayOrigin);
 
     // tracing the grid
@@ -109,6 +110,7 @@ vec3 VoxelTrace(vec3 eye, vec3 marchingDirection)
         if (Sample(cellIndex) > 0)
         {
             voxelcoord = cellIndex;
+            stepsTraced = steps;
             break;
         }
 
@@ -148,12 +150,13 @@ vec3 VoxelTrace(vec3 eye, vec3 marchingDirection)
             }
         }
 
-        stepsTraced++;
+        steps++;
 
         // if no voxel was hit or coord is outside the canvas
-        if (stepsTraced > voxelTraceSteps || isCoordOutsideCanvas(cellIndex))
+        if (steps > voxelTraceSteps || isCoordOutsideCanvas(cellIndex))
         {
             voxelcoord = vec3(0, 0, 0);
+            stepsTraced = steps;
             break;
         }
     }
@@ -220,8 +223,20 @@ void main()
     vec3 VoxelCoord;
     vec3 normal;
 
-    // trace rays
-    VoxelCoord = VoxelTrace(eye, dir);
+    // trace ray
+    int steps;
+    VoxelCoord = VoxelTrace(eye, dir, steps);
+    float top = voxelTraceSteps;
+    float stepvisual = steps / top;
+
+    // step visualization for debugging
+    if (visualizeSteps)
+    {
+        fragColor = vec4(bgc.x + stepvisual, bgc.y, bgc.z, 1);
+        return;
+    }
+
+    // sample hue
     vec3 albedo = hsv2rgb(vec3(Sample(VoxelCoord), 1, 1));
 
     // calc normals

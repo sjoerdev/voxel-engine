@@ -32,6 +32,7 @@ namespace Project
 
         int voxelTraceSteps = 600;
         bool normalAsAlbedo = false;
+        bool visualizeSteps = false;
         int currentBrushType = 0;
         float hue = 0.001f;
         Vector3i dataSize = new Vector3i(256, 256, 256); // this value should not change between serializing and deserializing
@@ -93,7 +94,7 @@ namespace Project
                 var uv = ndc * new Vector2(aspect, 1);
                 Vector3 dir = (camera.GetViewMatrix() * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
 
-                var position = voxelData.VoxelTrace(camera.Position, dir, voxelTraceSteps);
+                var position = voxelData.VoxelTrace(camera.Position, dir, 9999);
                 if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxelData.SculptVoxelData(((Vector3i)position), 32, hue);
                 if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxelData.SculptVoxelData(((Vector3i)position), 32, 0);
                 sculptTick += (1 / sculptTickSpeed);
@@ -150,6 +151,7 @@ namespace Project
 
             // other
             ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
+            ImGui.Checkbox("visualize steps", ref visualizeSteps);
             ImGui.SetNextItemWidth(100); ImGui.SliderInt("voxel trace steps", ref voxelTraceSteps, 10, 1000);
 
             // serialization
@@ -161,6 +163,7 @@ namespace Project
             shader.SetVector2("resolution", ((Vector2)Size));
             shader.SetFloat("iTime", timePassed);
             shader.SetBool("normalAsAlbedo", normalAsAlbedo);
+            shader.SetBool("visualizeSteps", visualizeSteps);
             shader.SetInt("voxelTraceSteps", voxelTraceSteps);
             shader.SetVector3("dataSize", ((Vector3)dataSize));
             shader.SetCamera(camera, "view", "camPos");
