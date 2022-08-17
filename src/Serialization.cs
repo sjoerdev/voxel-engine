@@ -1,7 +1,6 @@
 using OpenTK.Mathematics;
 using System.Text.Json;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 
 namespace Project
 {
@@ -27,18 +26,19 @@ namespace Project
         {
             string path = Environment.CurrentDirectory + "/" + fileName + ".bin";
             float[] flat = Flatten(voxelData, size);
-            IFormatter formatter = new BinaryFormatter();
             Stream stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);  
-            formatter.Serialize(stream, flat);
+            var writer = new BinaryWriter(stream, Encoding.UTF8, false);
+            for (int i = 0; i < flat.Length; i++) writer.Write(flat[i]);
             stream.Close();
         }
 
         public static float[,,] DeserializeVoxelsBinary(string fileName, Vector3i size)
         {
             string path = Environment.CurrentDirectory + "/" + fileName + ".bin";
-            IFormatter formatter = new BinaryFormatter();  
-            Stream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);  
-            float[] flat = (float[])formatter.Deserialize(stream);  
+            Stream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            float[] flat = new float[size.X * size.Y * size.Z];
+            var reader = new BinaryReader(stream, Encoding.UTF8, false);
+            for (int i = 0; i < flat.Length; i++) flat[i] = reader.ReadSingle();
             stream.Close(); 
             return Expand(flat, size);
         }
