@@ -183,14 +183,14 @@ void main()
     normal = VoxelNormal(VoxelCoord);
 
     // calc light pos
-    vec3 lightdir = vec3(1, 1, 1);
+    vec3 lightdir = vec3(1, 0.6, 1);
     vec3 lightpos = normalize(lightdir * 10000);
 
     // calc diffuse
     float diffuse = max(0.3, dot(lightpos, normal));
 
     // calc specular
-    vec3 specularcolor = vec3(0.5, 0.5, 0.5);
+    vec3 specularcolor = vec3(0.3, 0.3, 0.3);
     vec3 specular = pow(clamp(dot(lightpos, normal), 0.0, 1.0), 64.0) * specularcolor;
     
     // if nothing was hit
