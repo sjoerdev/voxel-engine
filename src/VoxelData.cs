@@ -18,11 +18,13 @@ namespace Project
         public void Save()
         {
             Serialization.SerializeVoxels("voxeldata", rawData, dataSize);
+            //Serialization.SerializeVoxelsBinary("voxeldata", rawData, dataSize);
         }
 
         public void Load()
         {
             rawData = Serialization.DeserializeVoxels("voxeldata", dataSize);
+            //rawData = Serialization.DeserializeVoxelsBinary("voxeldata", dataSize);
             GenTexture();
         }
 
