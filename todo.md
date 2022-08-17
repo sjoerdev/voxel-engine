@@ -10,3 +10,4 @@
 - show bounds of voxel canvas
 - remove the console window that imguihelper.cs seems to create
 - aabb check for canvas to improve performance
+- store voxels as binary instead of json format
