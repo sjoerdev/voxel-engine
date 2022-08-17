@@ -30,7 +30,7 @@ namespace Project
         private Shader shader;
         private VoxelData voxelData;
 
-        int voxelTraceSteps = 1024;
+        int voxelTraceSteps = 600;
         bool normalAsAlbedo = false;
         int currentBrushType = 0;
         float hue = 0.001f;
