@@ -8,6 +8,7 @@ out vec4 fragColor;
 uniform vec2 resolution;
 uniform float iTime;
 
+uniform bool canvasAABBcheck;
 uniform bool normalAsAlbedo;
 uniform bool visualizeSteps;
 uniform float sdfNormalPrecision;
@@ -153,7 +154,7 @@ vec3 VoxelTrace(vec3 eye, vec3 marchingDirection, out int stepsTraced)
         steps++;
 
         // if no voxel was hit or coord is outside the canvas
-        if (steps > voxelTraceSteps || isCoordOutsideCanvas(cellIndex))
+        if (steps > voxelTraceSteps || (canvasAABBcheck && isCoordOutsideCanvas(cellIndex)))
         {
             voxelcoord = vec3(0, 0, 0);
             stepsTraced = steps;
@@ -210,10 +211,10 @@ void main()
     vec3 dir = (view * vec4(uv * 1, 1, 1)).xyz;
 
     // offset eye to canvas aabb if possible
-    eye = intersectAABB(eye, dir, vec3(0), dataSize);
+    if (canvasAABBcheck) eye = intersectAABB(eye, dir, vec3(0), dataSize);
 
     // if ray never crossed the canvas aabb, return bg color
-    if (isCoordOutsideCanvas(eye))
+    if (isCoordOutsideCanvas(eye) && canvasAABBcheck)
     {
         fragColor = bgc;
 		return;

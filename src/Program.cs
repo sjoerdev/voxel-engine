@@ -31,6 +31,7 @@ namespace Project
         private VoxelData voxelData;
 
         int voxelTraceSteps = 600;
+        bool canvasAABBcheck = true;
         bool normalAsAlbedo = false;
         bool visualizeSteps = false;
         int currentBrushType = 0;
@@ -152,6 +153,7 @@ namespace Project
             // other
             ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
             ImGui.Checkbox("visualize steps", ref visualizeSteps);
+            ImGui.Checkbox("canvas aabb check", ref canvasAABBcheck);
             ImGui.SetNextItemWidth(100); ImGui.SliderInt("voxel trace steps", ref voxelTraceSteps, 10, 1000);
 
             // serialization
@@ -164,6 +166,7 @@ namespace Project
             shader.SetFloat("iTime", timePassed);
             shader.SetBool("normalAsAlbedo", normalAsAlbedo);
             shader.SetBool("visualizeSteps", visualizeSteps);
+            shader.SetBool("canvasAABBcheck", canvasAABBcheck);
             shader.SetInt("voxelTraceSteps", voxelTraceSteps);
             shader.SetVector3("dataSize", ((Vector3)dataSize));
             shader.SetCamera(camera, "view", "camPos");
