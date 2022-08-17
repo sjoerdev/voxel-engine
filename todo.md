@@ -3,7 +3,6 @@
 
 # optimizations
 - aabb check for canvas to improve performance
-- store voxels as binary instead of json format
 
 # features
 - exporting to .vox
