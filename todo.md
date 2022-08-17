@@ -1,9 +1,6 @@
 # bugs
 - fix sculpting subtex overlapping issue near borders
 
-# optimizations
-- aabb check for canvas to improve performance
-
 # features
 - exporting to .vox
 - better shading

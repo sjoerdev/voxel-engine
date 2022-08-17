@@ -24,6 +24,38 @@ float Sample(vec3 pos)
     return value;
 }
 
+vec3 intersectAABB(vec3 eye, vec3 dir, vec3 pos, vec3 size)
+{
+    float t1 = (pos.x - eye.x) / dir.x;
+    float t2 = (pos.x + size.x - eye.x) / dir.x;
+    float t3 = (pos.y - eye.y) / dir.y;
+    float t4 = (pos.y + size.y - eye.y) / dir.y;
+    float t5 = (pos.z - eye.z) / dir.z;
+    float t6 = (pos.z + size.z - eye.z) / dir.z;
+    float aMin = t1 < t2 ? t1 : t2;
+    float bMin = t3 < t4 ? t3 : t4;
+    float cMin = t5 < t6 ? t5 : t6;
+    float aMax = t1 > t2 ? t1 : t2;
+    float bMax = t3 > t4 ? t3 : t4;
+    float cMax = t5 > t6 ? t5 : t6;
+    float fMax = aMin > bMin ? aMin : bMin;
+    float fMin = aMax < bMax ? aMax : bMax;
+    float t7 = fMax > cMin ? fMax : cMin;
+    float t8 = fMin < cMax ? fMin : cMax;
+    float t9 = (t8 < 0 || t7 > t8) ? -1 : t7;
+    float t = t9;
+
+    if (t > 0 && t < 9999) return eye + t * dir;
+    else return eye;
+}
+
+// check if a coord is within the voxel data or not
+bool isCoordOutsideCanvas(vec3 coord)
+{
+    if (coord.x < -1 || coord.x > dataSize.x + 1 || coord.y < -1 || coord.y > dataSize.y + 1 || coord.z < -1 || coord.z > dataSize.z + 1) return true;
+    else return false;
+}
+
 vec3 VoxelTrace(vec3 eye, vec3 marchingDirection)
 {
     vec3 rayOrigin = eye;
@@ -118,8 +150,8 @@ vec3 VoxelTrace(vec3 eye, vec3 marchingDirection)
 
         stepsTraced++;
 
-        // if no voxel was hit
-        if (stepsTraced > voxelTraceSteps)
+        // if no voxel was hit or coord is outside the canvas
+        if (stepsTraced > voxelTraceSteps || isCoordOutsideCanvas(cellIndex))
         {
             voxelcoord = vec3(0, 0, 0);
             break;
@@ -164,12 +196,25 @@ vec3 hsv2rgb(vec3 c)
 
 void main()
 {
+    // define bg color
+    vec4 bgc = vec4(0.2, 0.2, 0.2, 1.0);
+
     // calc uv from ndc
     vec2 uv = ndc * normalize(resolution);
 
     // camera
     vec3 eye = camPos;
     vec3 dir = (view * vec4(uv * 1, 1, 1)).xyz;
+
+    // offset eye to canvas aabb if possible
+    eye = intersectAABB(eye, dir, vec3(0), dataSize);
+
+    // if ray never crossed the canvas aabb, return bg color
+    if (isCoordOutsideCanvas(eye))
+    {
+        fragColor = bgc;
+		return;
+    }
 
     // define variables
     vec3 VoxelCoord;
@@ -196,10 +241,11 @@ void main()
     // if nothing was hit
     if (VoxelCoord == vec3(0, 0, 0))
     {
-        fragColor = vec4(0.2, 0.2, 0.2, 1.0);
+        fragColor = bgc;
 		return;
     }
 
+    // normal as albedo for debugging
     if (normalAsAlbedo) albedo = (normal * 0.5 + 0.5);
     
     // return result
