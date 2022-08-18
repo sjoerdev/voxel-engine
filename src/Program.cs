@@ -127,7 +127,7 @@ namespace Project
 
             // setup imgui
             ImGui.SetWindowPos(new System.Numerics.Vector2(16, 16));
-            ImGui.SetWindowSize(new System.Numerics.Vector2(256, 256));
+            ImGui.SetWindowSize(new System.Numerics.Vector2(280, 280));
 
             // metrics
             ImGui.Text("fps: " + ImGui.GetIO().Framerate.ToString("#"));
