@@ -80,6 +80,15 @@ namespace Project
 
             position = position - Vector3i.One * radius / 2;
 
+            Vector3i delta = new Vector3i();
+            if (position.X < 0) delta.X = position.X;
+            if (position.Y < 0) delta.Y = position.Y;
+            if (position.Z < 0) delta.Z = position.Z;
+            if (position.X > dataSize.X - radius) delta.X = radius - (dataSize.X - position.X);
+            if (position.Y > dataSize.Y - radius) delta.Y = radius - (dataSize.Y - position.Y);
+            if (position.Z > dataSize.Z - radius) delta.Z = radius - (dataSize.Z - position.Z);
+            position -= delta;
+
             List<Vector3i> voxelsToChange = new List<Vector3i>();
 
             for (int x = 0; x < radius; x++)
@@ -102,7 +111,7 @@ namespace Project
                             Vector3i localCoord = new Vector3i(x, y, z);
                             Vector3i worldCoord = position + localCoord;
                             
-                            bool isInRadius = Vector3.Distance(localCoord, new Vector3(radius, radius , radius) / 2) < radius / 2;
+                            bool isInRadius = Vector3.Distance(localCoord - delta, new Vector3(radius, radius , radius) / 2) < radius / 2;
 
                             float currentWorldSpaceValue = rawData[worldCoord.X, worldCoord.Y, worldCoord.Z];
 
