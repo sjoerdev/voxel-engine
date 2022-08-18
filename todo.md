@@ -1,8 +1,8 @@
-# features
-- exporting to .vox
+# 1.0 release
 - more brush types
-- show bounds of voxel canvas
+- remove the empty console window
 
 # other
+- exporting to .vox
+- show bounds of voxel canvas
 - add gl error checking
-- remove the console window that imguihelper.cs seems to create
