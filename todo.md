@@ -2,3 +2,4 @@
 - show bounds of voxel canvas
 - add gl error checking
 - remove the empty console window
+- eye dropper
