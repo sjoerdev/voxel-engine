@@ -35,11 +35,12 @@ namespace Project
         bool normalAsAlbedo = false;
         bool visualizeSteps = false;
         int currentBrushType = 0;
+        int brushSize = 16;
         float hue = 0.001f;
         Vector3i dataSize = new Vector3i(256, 256, 256); // this value should not change between serializing and deserializing
 
         float sculptTick = 0;
-        float sculptTickSpeed = 30;
+        float brushSpeed = 30;
 
         public Window() : base(GameWindowSettings.Default, NativeWindowSettings.Default)
         {
@@ -96,9 +97,9 @@ namespace Project
                 Vector3 dir = (camera.GetViewMatrix() * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
 
                 var position = voxelData.VoxelTrace(camera.Position, dir, 9999);
-                if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxelData.SculptVoxelData(((Vector3i)position), 32, hue);
-                if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxelData.SculptVoxelData(((Vector3i)position), 32, 0);
-                sculptTick += (1 / sculptTickSpeed);
+                if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxelData.SculptVoxelData(((Vector3i)position), brushSize, hue);
+                if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxelData.SculptVoxelData(((Vector3i)position), brushSize, 0);
+                sculptTick += (1 / brushSpeed);
             }
 
             // camera orbit movement
@@ -127,39 +128,47 @@ namespace Project
 
             // setup imgui
             ImGui.SetWindowPos(new System.Numerics.Vector2(16, 16));
-            ImGui.SetWindowSize(new System.Numerics.Vector2(280, 280));
+            ImGui.SetWindowSize(new System.Numerics.Vector2(320, 420));
+            int itemsWidth = 180;
 
             // metrics
+            ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "metrics:");
             ImGui.Text("fps: " + ImGui.GetIO().Framerate.ToString("#"));
             int amount = 128;
             int startingPoint = frametimes.Count < amount ? 0 : frametimes.Count - amount;
             int size = frametimes.Count < amount ? frametimes.Count : amount;
-            ImGui.PlotLines("", ref frametimes.ToArray()[startingPoint], size, 0, "", 0.002f, 0.033f);
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.PlotLines("", ref frametimes.ToArray()[startingPoint], size, 0, "", 0.002f, 0.033f);
 
-            // brush type
-            string[] items = new string[2]{"add voxels", "remove voxels"};
-            ImGui.Combo("brush type", ref currentBrushType, items, items.Length);
-
-            // hue slider
+            // brush
+            for (int i = 0; i < 2; i++) ImGui.Spacing();
+            ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "brush settings:");
+            string[] items = new string[2]{"sculpt add", "sculpt remove"};
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("brush type", ref currentBrushType, items, items.Length);
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("brush size", ref brushSize, 2, 32);
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("brush speed", ref brushSpeed, 10, 30);
             System.Numerics.Vector4 hueSliderColor = new System.Numerics.Vector4();
             ImGui.ColorConvertHSVtoRGB(hue, 1, 0.5f, out hueSliderColor.X, out hueSliderColor.Y, out hueSliderColor.Z);
             hueSliderColor.W = 1;
             ImGui.PushStyleColor(ImGuiCol.FrameBg, hueSliderColor);
             ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, hueSliderColor);
             ImGui.PushStyleColor(ImGuiCol.FrameBgActive, hueSliderColor);
-            ImGui.SliderFloat("hue", ref hue, 0.001f, 1);
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("brush hue", ref hue, 0.001f, 1);
             ImGui.StyleColorsDark();
 
-            // other
+            // rendering
+            for (int i = 0; i < 2; i++) ImGui.Spacing();
+            ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "rendering settings:");
             ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
             ImGui.Checkbox("visualize steps", ref visualizeSteps);
             ImGui.Checkbox("canvas aabb check", ref canvasAABBcheck);
-            ImGui.SetNextItemWidth(100); ImGui.SliderInt("voxel trace steps", ref voxelTraceSteps, 10, 1000);
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref voxelTraceSteps, 10, 1000);
 
             // serialization
-            if (ImGui.Button("save", new System.Numerics.Vector2(128, 0))) voxelData.Save();
-            if (ImGui.Button("load", new System.Numerics.Vector2(128, 0))) voxelData.Load();
-            if (ImGui.Button("clear", new System.Numerics.Vector2(128, 0))) voxelData.LoadSphere();
+            for (int i = 0; i < 2; i++) ImGui.Spacing();
+            ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "serialization:");
+            if (ImGui.Button("save", new System.Numerics.Vector2(itemsWidth, 0))) voxelData.Save();
+            if (ImGui.Button("load", new System.Numerics.Vector2(itemsWidth, 0))) voxelData.Load();
+            if (ImGui.Button("clear", new System.Numerics.Vector2(itemsWidth, 0))) voxelData.LoadSphere();
 
             // pass data to shader
             shader.SetVector2("resolution", ((Vector2)Size));
