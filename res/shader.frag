@@ -60,109 +60,108 @@ bool isCoordOutsideCanvas(vec3 coord)
 
 vec3 VoxelTrace(vec3 eye, vec3 marchingDirection, out int stepsTraced)
 {
-    vec3 rayOrigin = eye;
-    vec3 rayDirection = marchingDirection;
-    vec3 cellDimension = vec3(1, 1, 1);
-    vec3 voxelcoord;
-    vec3 deltaT, nextCrossingT;
-    float t_x, t_y, t_z;
+    vec3 origin = eye;
+    vec3 direction = marchingDirection;
+    vec3 tdelta;
+    float tx, ty, tz;
 
-    // initializing values
-    if (rayDirection[0] < 0)
+    // initialize t
+    if (direction.x < 0)
     {
-        deltaT[0] = -cellDimension[0] / rayDirection[0];
-        t_x = (floor(rayOrigin[0] / cellDimension[0]) * cellDimension[0]- rayOrigin[0]) / rayDirection[0];
+        tdelta.x = -1 / direction.x;
+        tx = (floor(origin.x / 1) * 1 - origin.x) / direction.x;
     }
     else 
     {
-        deltaT[0] = cellDimension[0] / rayDirection[0];
-        t_x = ((floor(rayOrigin[0] / cellDimension[0]) + 1) * cellDimension[0] - rayOrigin[0]) / rayDirection[0];
+        tdelta.x = 1 / direction.x;
+        tx = ((floor(origin.x / 1) + 1) * 1 - origin.x) / direction.x;
     }
-    if (rayDirection[1] < 0) 
+    if (direction.y < 0) 
     {
-        deltaT[1] = -cellDimension[1] / rayDirection[1];
-        t_y = (floor(rayOrigin[1] / cellDimension[1]) * cellDimension[1] - rayOrigin[1]) / rayDirection[1];
+        tdelta.y = -1 / direction.y;
+        ty = (floor(origin.y / 1) * 1 - origin.y) / direction.y;
     }
     else 
     {
-        deltaT[1] = cellDimension[1] / rayDirection[1];
-        t_y = ((floor(rayOrigin[1] / cellDimension[1]) + 1) * cellDimension[1] - rayOrigin[1]) / rayDirection[1];
+        tdelta.y = 1 / direction.y;
+        ty = ((floor(origin.y / 1) + 1) * 1 - origin.y) / direction.y;
     }
-    if (rayDirection[2] < 0)
+    if (direction.z < 0)
     {
-        deltaT[2] = -cellDimension[2] / rayDirection[2];
-        t_z = (floor(rayOrigin[2] / cellDimension[2]) * cellDimension[2] - rayOrigin[2]) / rayDirection[2];
+        tdelta.z = -1 / direction.z;
+        tz = (floor(origin.z / 1) * 1 - origin.z) / direction.z;
     }
     else
     {
-        deltaT[2] = cellDimension[2] / rayDirection[2];
-        t_z = ((floor(rayOrigin[2] / cellDimension[2]) + 1) * cellDimension[2] - rayOrigin[2]) / rayDirection[2];
+        tdelta.z = 1 / direction.z;
+        tz = ((floor(origin.z / 1) + 1) * 1 - origin.z) / direction.z;
     }
 
     // initializing some variables
     float t = 0;
     int steps = 0;
-    vec3 cellIndex = floor(rayOrigin);
+    vec3 coord = floor(origin);
+    vec3 result;
 
     // tracing the grid
     while (true)
     {
         // if voxel is found
-        if (Sample(cellIndex) > 0)
+        if (Sample(coord) > 0)
         {
-            voxelcoord = cellIndex;
+            result = coord;
             stepsTraced = steps;
             break;
         }
 
         // increment step
-        if (t_x < t_y)
+        if (tx < ty)
         {
-            if (t_x < t_z)
+            if (tx < tz)
             {
-                t = t_x;
-                t_x += deltaT[0];
-                if (rayDirection[0] < 0) cellIndex[0] -= 1;
-                else cellIndex[0] += 1;
+                t = tx;
+                tx += tdelta.x;
+                if (direction.x < 0) coord.x -= 1;
+                else coord.x += 1;
             }
             else
             {
-                t = t_z;
-                t_z += deltaT[2];
-                if (rayDirection[2] < 0) cellIndex[2] -= 1;
-                else cellIndex[2] += 1;
+                t = tz;
+                tz += tdelta.z;
+                if (direction.z < 0) coord.z -= 1;
+                else coord.z += 1;
             }
         }
         else
         {
-            if (t_y < t_z)
+            if (ty < tz)
             {
-                t = t_y;
-                t_y += deltaT[1];
-                if (rayDirection[1] < 0) cellIndex[1] -= 1;
-                else cellIndex[1] += 1;
+                t = ty;
+                ty += tdelta.y;
+                if (direction.y < 0) coord.y -= 1;
+                else coord.y += 1;
             }
             else
             {
-                t = t_z;
-                t_z += deltaT[2];
-                if (rayDirection[2] < 0) cellIndex[2] -= 1;
-                else cellIndex[2] += 1;
+                t = tz;
+                tz += tdelta.z;
+                if (direction.z < 0) coord.z -= 1;
+                else coord.z += 1;
             }
         }
 
         steps++;
 
         // if no voxel was hit or coord is outside the canvas
-        if (steps > voxelTraceSteps || (canvasAABBcheck && isCoordOutsideCanvas(cellIndex)))
+        if (steps > voxelTraceSteps || (canvasAABBcheck && isCoordOutsideCanvas(coord)))
         {
-            voxelcoord = vec3(0, 0, 0);
+            result = vec3(0);
             stepsTraced = steps;
             break;
         }
     }
 
-    return voxelcoord;
+    return result;
 }
 
 vec3 VoxelNormal(vec3 coord)
