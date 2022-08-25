@@ -167,112 +167,107 @@ namespace Project
             return xIsInBounds && yIsInBounds && zIsInBounds;
         }
 
-        public Vector3 VoxelTrace(Vector3 eye, Vector3 marchingDirection, int voxelTraceSteps)
+        public Vector3i VoxelTrace(Vector3 eye, Vector3 marchingDirection, int voxelTraceSteps)
         {
-            Vector3 rayOrigin = eye;
-            Vector3 rayDirection = marchingDirection;
-            Vector3 cellDimension = new Vector3(1, 1, 1);
-            Vector3 voxelcoord;
-            Vector3 deltaT;
-            float t_x, t_y, t_z;
+            Vector3 origin = eye;
+            Vector3 direction = marchingDirection;
+            Vector3 tdelta;
+            float tx, ty, tz;
 
-            // initializing values
-            if (rayDirection.X < 0)
+            // initialize t
+            if (direction.X < 0)
             {
-                deltaT.X = -cellDimension.X / rayDirection.X;
-                t_x = (MathF.Floor(rayOrigin.X / cellDimension.X) * cellDimension.X- rayOrigin.X) / rayDirection.X;
+                tdelta.X = -1 / direction.X;
+                tx = (MathF.Floor(origin.X / 1) * 1 - origin.X) / direction.X;
             }
             else 
             {
-                deltaT.X = cellDimension.X / rayDirection.X;
-                t_x = ((MathF.Floor(rayOrigin.X / cellDimension.X) + 1) * cellDimension.X - rayOrigin.X) / rayDirection.X;
+                tdelta.X = 1 / direction.X;
+                tx = ((MathF.Floor(origin.X / 1) + 1) * 1 - origin.X) / direction.X;
             }
-            if (rayDirection.Y < 0)
+            if (direction.Y < 0)
             {
-                deltaT.Y = -cellDimension.Y / rayDirection.Y;
-                t_y = (MathF.Floor(rayOrigin.Y / cellDimension.Y) * cellDimension.Y - rayOrigin.Y) / rayDirection.Y;
+                tdelta.Y = -1 / direction.Y;
+                ty = (MathF.Floor(origin.Y / 1) * 1 - origin.Y) / direction.Y;
             }
             else 
             {
-                deltaT.Y = cellDimension.Y / rayDirection.Y;
-                t_y = ((MathF.Floor(rayOrigin.Y / cellDimension.Y) + 1) * cellDimension.Y - rayOrigin.Y) / rayDirection.Y;
+                tdelta.Y = 1 / direction.Y;
+                ty = ((MathF.Floor(origin.Y / 1) + 1) * 1 - origin.Y) / direction.Y;
             }
-            if (rayDirection.Z < 0)
+            if (direction.Z < 0)
             {
-                deltaT.Z = -cellDimension.Z / rayDirection.Z;
-                t_z = (MathF.Floor(rayOrigin.Z / cellDimension.Z) * cellDimension.Z - rayOrigin.Z) / rayDirection.Z;
+                tdelta.Z = -1 / direction.Z;
+                tz = (MathF.Floor(origin.Z / 1) * 1 - origin.Z) / direction.Z;
             }
             else
             {
-                deltaT.Z = cellDimension.Z / rayDirection.Z;
-                t_z = ((MathF.Floor(rayOrigin.Z / cellDimension.Z) + 1) * cellDimension.Z - rayOrigin.Z) / rayDirection.Z;
+                tdelta.Z = 1 / direction.Z;
+                tz = ((MathF.Floor(origin.Z / 1) + 1) * 1 - origin.Z) / direction.Z;
             }
 
             // initializing some variables
             float t = 0;
-            float stepsTraced = 0;
-            Vector3 cellIndex = new Vector3(MathF.Floor(rayOrigin.X), MathF.Floor(rayOrigin.Y), MathF.Floor(rayOrigin.Z));
+            float steps = 0;
+            Vector3i coord = new Vector3i(((int)MathF.Floor(origin.X)), ((int)MathF.Floor(origin.Y)), ((int)MathF.Floor(origin.Z)));
+            Vector3i result;
 
-            // tracing the grid
+            // tracing through the grid
             while (true)
             {
-                // if voxel is found
-                if (IsInBounds(cellIndex, rawData))
+                // if voxel is hit
+                if (IsInBounds(coord, rawData) && rawData[coord.X, coord.Y, coord.Z] > 0)
                 {
-                    if (rawData[((int)cellIndex.X), ((int)cellIndex.Y), ((int)cellIndex.Z)] > 0)
-                    {
-                        voxelcoord = cellIndex;
-                        break;
-                    }
+                    result = coord;
+                    break;
+                }
+
+                // if no voxel was hit
+                if (steps > voxelTraceSteps)
+                {
+                    result = new Vector3i();
+                    break;
                 }
 
                 // increment step
-                if (t_x < t_y)
+                if (tx < ty)
                 {
-                    if (t_x < t_z)
+                    if (tx < tz)
                     {
-                        t = t_x;
-                        t_x += deltaT.X;
-                        if (rayDirection.X < 0) cellIndex.X -= 1;
-                        else cellIndex.X += 1;
+                        t = tx;
+                        tx += tdelta.X;
+                        if (direction.X < 0) coord.X -= 1;
+                        else coord.X += 1;
                     }
                     else
                     {
-                        t = t_z;
-                        t_z += deltaT.Z;
-                        if (rayDirection.Z < 0) cellIndex.Z -= 1;
-                        else cellIndex.Z += 1;
+                        t = tz;
+                        tz += tdelta.Z;
+                        if (direction.Z < 0) coord.Z -= 1;
+                        else coord.Z += 1;
                     }
                 }
                 else
                 {
-                    if (t_y < t_z)
+                    if (ty < tz)
                     {
-                        t = t_y;
-                        t_y += deltaT.Y;
-                        if (rayDirection.Y < 0) cellIndex.Y -= 1;
-                        else cellIndex.Y += 1;
+                        t = ty;
+                        ty += tdelta.Y;
+                        if (direction.Y < 0) coord.Y -= 1;
+                        else coord.Y += 1;
                     }
                     else
                     {
-                        t = t_z;
-                        t_z += deltaT.Z;
-                        if (rayDirection.Z < 0) cellIndex.Z -= 1;
-                        else cellIndex.Z += 1;
+                        t = tz;
+                        tz += tdelta.Z;
+                        if (direction.Z < 0) coord.Z -= 1;
+                        else coord.Z += 1;
                     }
                 }
-
-                stepsTraced++;
-
-                // if no voxel was hit
-                if (stepsTraced > voxelTraceSteps)
-                {
-                    voxelcoord = new Vector3(0, 0, 0);
-                    break;
-                }
+                steps++;
             }
 
-            return voxelcoord;
+            return result;
         }
     }
 }

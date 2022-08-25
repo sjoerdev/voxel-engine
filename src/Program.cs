@@ -97,8 +97,8 @@ namespace Project
                 Vector3 dir = (camera.GetViewMatrix() * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
 
                 var position = voxelData.VoxelTrace(camera.Position, dir, 9999);
-                if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxelData.SculptVoxelData(((Vector3i)position), brushSize, hue);
-                if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxelData.SculptVoxelData(((Vector3i)position), brushSize, 0);
+                if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxelData.SculptVoxelData(position, brushSize, hue);
+                if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxelData.SculptVoxelData(position, brushSize, 0);
                 sculptTick += (1 / brushSpeed);
             }
 
