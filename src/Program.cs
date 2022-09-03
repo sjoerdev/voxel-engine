@@ -61,7 +61,7 @@ namespace Project
             base.OnLoad();
 
             // setup shader
-            shader = new Shader("res/shader.vert", "res/shader.frag");
+            shader = new Shader("res/vert.glsl", "res/frag.glsl");
 
             // setup camera
             var pos = new Vector3(dataSize.X / 2, dataSize.Y / 2, dataSize.Z * 2);
