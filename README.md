@@ -56,8 +56,9 @@ public static void SerializeVoxelsBinary(string fileName, float[,,] voxelData, V
 }
 ```
 
-## Tracing a ray through voxel data using the 3d dda algorithm on the cpu and on the gpu:
+## Tracing a ray through a volume of voxels:
 If i want to render the voxels using ray tracing, i have to first find a way to trace a ray through a volume of voxels, after some research i found the 3d dda algorithm, which can be implemented in C# like this:
+
 ```csharp
 public Vector3i VoxelTrace(Vector3 eye, Vector3 marchingDirection, int voxelTraceSteps)
 {
