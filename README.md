@@ -1,4 +1,4 @@
-## What is this?
+## What is this, and how was it made?
 This is a voxel engine. You can use it to make voxel art, or you can just play around with it. In 3D computer graphics, a voxel represents a value on a regular grid in three-dimensional space. As with pixels in a 2D. So basically a voxel is a 3D pixel. I made this project with no experience of how graphics API's worked, i had to learn everything from scratch and i learned a ton along the way. The project is made with C# and OpenGL.
 
 <img width="632" alt="OJYno4" src="https://user-images.githubusercontent.com/59654421/188631933-4fae6c0a-b264-4192-b201-6c7c5f9e9588.png">
@@ -57,7 +57,153 @@ public static void SerializeVoxelsBinary(string fileName, float[,,] voxelData, V
 ```
 
 ## Tracing a ray through voxel data using the 3d dda algorithm on the cpu and on the gpu:
-todo
+If i want to render the voxels using ray tracing, i have to first find a way to trace a ray through a volume of voxels, after some research i found the 3d dda algorithm, which can be implemented in C# like this:
+```csharp
+public Vector3i VoxelTrace(Vector3 eye, Vector3 marchingDirection, int voxelTraceSteps)
+{
+    Vector3 origin = eye;
+    Vector3 direction = marchingDirection;
+    Vector3 tdelta;
+    float tx, ty, tz;
+
+    // initialize t
+    if (direction.X < 0)
+    {
+        tdelta.X = -1 / direction.X;
+        tx = (MathF.Floor(origin.X / 1) * 1 - origin.X) / direction.X;
+    }
+    else 
+    {
+        tdelta.X = 1 / direction.X;
+        tx = ((MathF.Floor(origin.X / 1) + 1) * 1 - origin.X) / direction.X;
+    }
+    if (direction.Y < 0)
+    {
+        tdelta.Y = -1 / direction.Y;
+        ty = (MathF.Floor(origin.Y / 1) * 1 - origin.Y) / direction.Y;
+    }
+    else 
+    {
+        tdelta.Y = 1 / direction.Y;
+        ty = ((MathF.Floor(origin.Y / 1) + 1) * 1 - origin.Y) / direction.Y;
+    }
+    if (direction.Z < 0)
+    {
+        tdelta.Z = -1 / direction.Z;
+        tz = (MathF.Floor(origin.Z / 1) * 1 - origin.Z) / direction.Z;
+    }
+    else
+    {
+        tdelta.Z = 1 / direction.Z;
+        tz = ((MathF.Floor(origin.Z / 1) + 1) * 1 - origin.Z) / direction.Z;
+    }
+
+    // initializing some variables
+    float t = 0;
+    float steps = 0;
+    Vector3i coord = new Vector3i(((int)MathF.Floor(origin.X)), ((int)MathF.Floor(origin.Y)), ((int)MathF.Floor(origin.Z)));
+    Vector3i result;
+
+    // tracing through the grid
+    while (true)
+    {
+        // if voxel is hit
+        if (IsInBounds(coord, rawData) && rawData[coord.X, coord.Y, coord.Z] > 0)
+        {
+            result = coord;
+            break;
+        }
+
+        // if no voxel was hit
+        if (steps > voxelTraceSteps)
+        {
+            result = new Vector3i();
+            break;
+        }
+
+        // increment step
+        if (tx < ty)
+        {
+            if (tx < tz)
+            {
+                t = tx;
+                tx += tdelta.X;
+                if (direction.X < 0) coord.X -= 1;
+                else coord.X += 1;
+            }
+            else
+            {
+                t = tz;
+                tz += tdelta.Z;
+                if (direction.Z < 0) coord.Z -= 1;
+                else coord.Z += 1;
+            }
+        }
+        else
+        {
+            if (ty < tz)
+            {
+                t = ty;
+                ty += tdelta.Y;
+                if (direction.Y < 0) coord.Y -= 1;
+                else coord.Y += 1;
+            }
+            else
+            {
+                t = tz;
+                tz += tdelta.Z;
+                if (direction.Z < 0) coord.Z -= 1;
+                else coord.Z += 1;
+            }
+        }
+        steps++;
+    }
+
+    return result;
+}
+```
+
+This code can ealitly be replicated in the GLSL shader language, and a glsl implementation can be found in this repo inside the main fragment shader.
 
 ## Calculating normals for voxels and implementing the phong shading model:
-todo
+To calculate shadows, reflections and other lighting effects, i first have to calculate the normal of the voxel, this is done much differently to how a normal is calculated for polygons. This is the technique i decided to use:
+
+```glsl
+// this calculated a normal for a given voxel, it is calculated by sampling neighboring voxels
+vec3 VoxelNormal(vec3 coord)
+{
+    vec3 normal = vec3(0, 0, 0);
+    int samplesize = 5;
+    float t = samplesize / 2;
+    
+    for (int x = 0; x < samplesize; x++)
+    {
+        for (int y = 0; y < samplesize; y++)
+        {
+            for (int z = 0; z < samplesize; z++)
+            {
+                float a = x - t;
+                float b = y - t;
+                float c = z - t;
+                if (Sample(vec3(coord.x + a, coord.y + b, coord.z + c)) > 0) 
+                {
+                    normal += vec3(a, b, c);
+                }
+            }
+        }
+    }
+
+    return -normalize(normal);
+}
+```
+
+Using the phong shading model, diffuse and specular lighting can then be claculated using the normal like this:
+
+```glsl
+// calc diffuse
+float diffuse = max(0.3, dot(lightpos, normal));
+
+// calc specular
+vec3 specularcolor = vec3(0.3, 0.3, 0.3);
+vec3 specular = pow(clamp(dot(lightpos, normal), 0.0, 1.0), 64.0) * specularcolor;
+```
