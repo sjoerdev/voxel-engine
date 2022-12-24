@@ -28,25 +28,11 @@ float Sample(vec3 pos)
 
 vec3 intersectAABB(vec3 eye, vec3 dir, vec3 pos, vec3 size)
 {
-    float t1 = (pos.x - eye.x) / dir.x;
-    float t2 = (pos.x + size.x - eye.x) / dir.x;
-    float t3 = (pos.y - eye.y) / dir.y;
-    float t4 = (pos.y + size.y - eye.y) / dir.y;
-    float t5 = (pos.z - eye.z) / dir.z;
-    float t6 = (pos.z + size.z - eye.z) / dir.z;
-    float aMin = t1 < t2 ? t1 : t2;
-    float bMin = t3 < t4 ? t3 : t4;
-    float cMin = t5 < t6 ? t5 : t6;
-    float aMax = t1 > t2 ? t1 : t2;
-    float bMax = t3 > t4 ? t3 : t4;
-    float cMax = t5 > t6 ? t5 : t6;
-    float fMax = aMin > bMin ? aMin : bMin;
-    float fMin = aMax < bMax ? aMax : bMax;
-    float t7 = fMax > cMin ? fMax : cMin;
-    float t8 = fMin < cMax ? fMin : cMax;
-    float t9 = (t8 < 0 || t7 > t8) ? -1 : t7;
-    float t = t9;
-
+    vec3 t1 = (pos - eye) / dir;
+    vec3 t2 = (pos + size - eye) / dir;
+    vec3 tMin = min(t1, t2);
+    vec3 tMax = max(t1, t2);
+    float t = max(tMin.x, max(tMin.y, tMin.z));
     if (t > 0 && t < 9999) return eye + t * dir;
     else return eye;
 }
