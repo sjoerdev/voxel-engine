@@ -69,6 +69,8 @@ namespace Project
 
             // setup imgui
             imgui = new ImGuiHelper(Size.X, Size.Y);
+            ImGui.SetWindowPos(new System.Numerics.Vector2(16, 16));
+            ImGui.SetWindowSize(new System.Numerics.Vector2(320, 420));
 
             // create voxel data
             voxelData = new VoxelData(dataSize);
@@ -126,9 +128,6 @@ namespace Project
             shader.Use();
             frametimes.Add(((float)args.Time));
 
-            // setup imgui
-            ImGui.SetWindowPos(new System.Numerics.Vector2(16, 16));
-            ImGui.SetWindowSize(new System.Numerics.Vector2(320, 420));
             int itemsWidth = 180;
 
             // metrics
