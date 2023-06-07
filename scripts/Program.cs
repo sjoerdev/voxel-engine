@@ -69,8 +69,6 @@ public class Window : GameWindow
 
         // setup imgui
         imgui = new ImGuiHelper(Size.X, Size.Y);
-        ImGui.SetWindowPos(new System.Numerics.Vector2(16, 16));
-        ImGui.SetWindowSize(new System.Numerics.Vector2(320, 420));
 
         // create voxel data
         voxelData = new VoxelData(dataSize);
@@ -129,15 +127,17 @@ public class Window : GameWindow
         shader.Use();
         frametimes.Add(((float)args.Time));
 
+        ImGui.Begin("window");
         int itemsWidth = 180;
 
         // metrics
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "metrics:");
-        ImGui.Text("fps: " + ImGui.GetIO().Framerate.ToString("#"));
-        int amount = 128;
-        int startingPoint = frametimes.Count < amount ? 0 : frametimes.Count - amount;
-        int size = frametimes.Count < amount ? frametimes.Count : amount;
-        ImGui.SetNextItemWidth(itemsWidth); ImGui.PlotLines("", ref frametimes.ToArray()[startingPoint], size, 0, "", 0.002f, 0.033f);
+        int amount = 256;
+        float maxFramerate = 165;
+        float minFramerate = 20;
+        int start = frametimes.Count < amount ? 0 : frametimes.Count - amount;
+        int length = frametimes.Count < amount ? frametimes.Count : amount;
+        ImGui.PlotLines("", ref frametimes.ToArray()[start], length, 0, "fps: " + ImGui.GetIO().Framerate.ToString("#"), 1f / maxFramerate, 1f / minFramerate, new System.Numerics.Vector2(0, 40));
 
         // brush
         for (int i = 0; i < 2; i++) ImGui.Spacing();
@@ -169,6 +169,8 @@ public class Window : GameWindow
         if (ImGui.Button("save", new System.Numerics.Vector2(itemsWidth, 0))) voxelData.Save();
         if (ImGui.Button("load", new System.Numerics.Vector2(itemsWidth, 0))) voxelData.Load();
         if (ImGui.Button("clear", new System.Numerics.Vector2(itemsWidth, 0))) voxelData.LoadSphere();
+
+        ImGui.End();
 
         // pass data to shader
         shader.SetVector2("resolution", ((Vector2)Size));
