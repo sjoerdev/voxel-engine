@@ -18,9 +18,15 @@ public class Shader
         GL.ShaderSource(vert, vertCode);
         GL.CompileShader(vert);
 
+        GL.GetShader(vert, ShaderParameter.CompileStatus, out int vStatus);
+        if (vStatus != 1) throw new Exception("Vertex shader failed to compile: " + GL.GetShaderInfoLog(vert));
+
         int frag = GL.CreateShader(ShaderType.FragmentShader);
         GL.ShaderSource(frag, fragCode);
         GL.CompileShader(frag);
+
+        GL.GetShader(frag, ShaderParameter.CompileStatus, out int fStatus);
+        if (fStatus != 1) throw new Exception("Fragment shader failed to compile: " + GL.GetShaderInfoLog(frag));
 
         handle = GL.CreateProgram();
         GL.AttachShader(handle, vert);
@@ -54,16 +60,6 @@ public class Shader
         GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
         GL.EnableVertexAttribArray(0);
         GL.BindVertexArray(0);
-    }
-
-    private static void CheckForGLError()
-    {
-        var error = GL.GetError();
-        if (error != OpenTK.Graphics.OpenGL.ErrorCode.NoError)
-        {
-            Console.WriteLine(error);
-            throw new InvalidOperationException();
-        }
     }
 
     public void SetViewport(Vector2i resolution)
