@@ -15,21 +15,19 @@ class Program
     }
 }
 
-public class Window : GameWindow
+class Window : GameWindow
 {
-    ImGuiHelper imgui;
-    private float timePassed;
-    private List<float> frametimes = new List<float>();
-    
-    private bool firstMouseMovement = true;
-    private Vector2 lastMousePos;
-    private Vector2 camOrbitRotation;
-    private float cameraDistance = 200;
+    ImGuiHelper imguiHelper;
+    Camera camera;
+    Shader shader;
+    Voxels voxels;
 
-    private Camera camera;
-    private Shader shader;
-    private VoxelData voxelData;
-
+    float timePassed;
+    List<float> frametimes = new List<float>();
+    bool firstMouseMovement = true;
+    Vector2 lastMousePos;
+    Vector2 camOrbitRotation;
+    float cameraDistance = 200;
     int voxelTraceSteps = 600;
     bool canvasAABBcheck = true;
     bool normalAsAlbedo = false;
@@ -37,8 +35,6 @@ public class Window : GameWindow
     int currentBrushType = 0;
     int brushSize = 16;
     float hue = 0.001f;
-    Vector3i dataSize = new Vector3i(256, 256, 256); // this value should not change between serializing and deserializing
-
     float sculptTick = 0;
     float brushSpeed = 30;
 
@@ -52,8 +48,8 @@ public class Window : GameWindow
     {
         base.OnResize(args);
         if (shader != null) shader.SetViewport(Size);
-        if (camera != null) camera.AspectRatio = Size.X / Size.Y;
-        if (imgui != null) imgui.WindowResized(Size.X, Size.Y);
+        if (camera != null) camera.aspect = Size.X / Size.Y;
+        if (imguiHelper != null) imguiHelper.WindowResized(Size.X, Size.Y);
     }
 
     protected override void OnLoad()
@@ -63,15 +59,15 @@ public class Window : GameWindow
         // setup shader
         shader = new Shader("shaders/vert.glsl", "shaders/frag.glsl");
 
+        // create voxel data
+        voxels = new Voxels(new Vector3i(256, 256, 256));
+
         // setup camera
-        var pos = new Vector3(dataSize.X / 2, dataSize.Y / 2, dataSize.Z * 2);
+        var pos = new Vector3(voxels.size.X / 2, voxels.size.Y / 2, voxels.size.Z * 2);
         camera = new Camera(pos, Size.X / Size.Y);
 
         // setup imgui
-        imgui = new ImGuiHelper(Size.X, Size.Y);
-
-        // create voxel data
-        voxelData = new VoxelData(dataSize);
+        imguiHelper = new ImGuiHelper(Size.X, Size.Y);
     }
 
     protected override void OnUnload()
@@ -96,18 +92,14 @@ public class Window : GameWindow
             float aspect = (float)Size.X / (float)Size.Y;
             var uv = ndc * new Vector2(aspect, 1);
             Vector3 dir = (camera.GetViewMatrix() * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
-
-            var position = voxelData.VoxelTrace(camera.Position, dir, 9999);
-            if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxelData.SculptVoxelData(position, brushSize, hue);
-            if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxelData.SculptVoxelData(position, brushSize, 0);
+            var position = voxels.VoxelTrace(camera.position, dir, 9999);
+            if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxels.SculptVoxelData(position, brushSize, hue);
+            if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxels.SculptVoxelData(position, brushSize, 0);
             sculptTick += (1 / brushSpeed);
         }
 
         // camera orbit movement
-        if (firstMouseMovement)
-        {
-            firstMouseMovement = false;
-        }
+        if (firstMouseMovement) firstMouseMovement = false;
         else if (mouse.IsButtonDown(MouseButton.Right))
         {
             Vector2 mouseDelta = new Vector2(-(mouse.X - lastMousePos.X), mouse.Y - lastMousePos.Y);
@@ -117,20 +109,21 @@ public class Window : GameWindow
         }
         lastMousePos = new Vector2(mouse.X, mouse.Y);
         cameraDistance -= mouse.ScrollDelta.Y * 10;
-        camera.RotateAround(dataSize / 2, camOrbitRotation, cameraDistance);
+        camera.RotateAround(voxels.size / 2, camOrbitRotation, cameraDistance);
     }
 
     protected override void OnRenderFrame(FrameEventArgs args)
     {
         base.OnRenderFrame(args);
-        imgui.Update(this, (float)args.Time);
+        imguiHelper.Update(this, (float)args.Time);
         shader.Use();
         frametimes.Add(((float)args.Time));
 
+        // imgui start
         ImGui.Begin("window");
         int itemsWidth = 180;
 
-        // metrics
+        // imgui metrics
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "metrics:");
         int amount = 256;
         float maxFramerate = 165;
@@ -139,7 +132,7 @@ public class Window : GameWindow
         int length = frametimes.Count < amount ? frametimes.Count : amount;
         ImGui.PlotLines("", ref frametimes.ToArray()[start], length, 0, "fps: " + ImGui.GetIO().Framerate.ToString("#"), 1f / maxFramerate, 1f / minFramerate, new System.Numerics.Vector2(0, 40));
 
-        // brush
+        // imgui brush
         for (int i = 0; i < 2; i++) ImGui.Spacing();
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "brush settings:");
         string[] items = new string[2]{"sculpt add", "sculpt remove"};
@@ -155,7 +148,7 @@ public class Window : GameWindow
         ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("brush hue", ref hue, 0.001f, 1);
         ImGui.StyleColorsDark();
 
-        // rendering
+        // imgui rendering settings
         for (int i = 0; i < 2; i++) ImGui.Spacing();
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "rendering settings:");
         ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
@@ -163,13 +156,14 @@ public class Window : GameWindow
         ImGui.Checkbox("canvas aabb check", ref canvasAABBcheck);
         ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref voxelTraceSteps, 10, 1000);
 
-        // serialization
+        // imgui serialization
         for (int i = 0; i < 2; i++) ImGui.Spacing();
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "serialization:");
-        if (ImGui.Button("save", new System.Numerics.Vector2(itemsWidth, 0))) voxelData.Save();
-        if (ImGui.Button("load", new System.Numerics.Vector2(itemsWidth, 0))) voxelData.Load();
-        if (ImGui.Button("clear", new System.Numerics.Vector2(itemsWidth, 0))) voxelData.LoadSphere();
+        if (ImGui.Button("save", new System.Numerics.Vector2(itemsWidth, 0))) voxels.Save();
+        if (ImGui.Button("load", new System.Numerics.Vector2(itemsWidth, 0))) voxels.Load();
+        if (ImGui.Button("clear", new System.Numerics.Vector2(itemsWidth, 0))) voxels.LoadSphere();
 
+        // imgui end
         ImGui.End();
 
         // pass data to shader
@@ -179,26 +173,25 @@ public class Window : GameWindow
         shader.SetBool("visualizeSteps", visualizeSteps);
         shader.SetBool("canvasAABBcheck", canvasAABBcheck);
         shader.SetInt("voxelTraceSteps", voxelTraceSteps);
-        shader.SetVector3("dataSize", ((Vector3)dataSize));
+        shader.SetVector3("dataSize", ((Vector3)voxels.size));
         shader.SetCamera(camera, "view", "camPos");
-        shader.SetVoxelData(voxelData, "data");
+        shader.SetVoxelData(voxels, "data");
 
         // render
         shader.Render();
-        imgui.Render();
-        ImGuiHelper.CheckGLError("End of frame");
-        this.Context.SwapBuffers();
+        imguiHelper.Render();
+        Context.SwapBuffers();
     }
 
     protected override void OnTextInput(TextInputEventArgs eventArgs)
     {
         base.OnTextInput(eventArgs);
-        imgui.PressChar((char)eventArgs.Unicode);
+        imguiHelper.PressChar((char)eventArgs.Unicode);
     }
 
     protected override void OnMouseWheel(MouseWheelEventArgs eventArgs)
     {
         base.OnMouseWheel(eventArgs);
-        imgui.MouseScroll(eventArgs.Offset);
+        imguiHelper.MouseScroll(eventArgs.Offset);
     }
 }

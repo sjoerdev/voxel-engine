@@ -4,60 +4,35 @@ namespace Project;
 
 public class Camera
 {
-    private Vector3 front = -Vector3.UnitZ;
-    private Vector3 up = Vector3.UnitY;
-    private Vector3 right = Vector3.UnitX;
-
+    private Vector3 front;
+    private Vector3 up;
+    private Vector3 right;
     private float pitch;
     private float yaw;
-    
-    private float fov = MathHelper.PiOver2;
+    public Vector3 position;
+    public float aspect;
 
-    public Camera(Vector3 position, float aspectRatio)
+    public Camera(Vector3 position, float aspect)
     {
-        Position = position;
-        AspectRatio = aspectRatio;
-    }
-
-    public Vector3 Position { get; set; }
-    public float AspectRatio { private get; set; }
-
-    public float Fov
-    {
-        get => MathHelper.RadiansToDegrees(fov);
-        set
-        {
-            var angle = MathHelper.Clamp(value, 1f, 90f);
-            fov = MathHelper.DegreesToRadians(angle);
-        }
+        this.position = position;
+        this.aspect = aspect;
     }
 
     public Matrix4 GetViewMatrix()
     {
-        return Matrix4.LookAt(Position, Position + front, up);
-    }
-
-    public Matrix4 GetProjectionMatrix()
-    {
-        return Matrix4.CreatePerspectiveFieldOfView(fov, AspectRatio, 0.01f, 100f);
-    }
-
-    private void UpdateVectors()
-    {
-        front.X = MathF.Cos(pitch) * MathF.Cos(yaw);
-        front.Y = MathF.Sin(pitch);
-        front.Z = MathF.Cos(pitch) * MathF.Sin(yaw);
-        front = Vector3.Normalize(front);
-        right = Vector3.Normalize(Vector3.Cross(front, Vector3.UnitY));
-        up = Vector3.Normalize(Vector3.Cross(right, front));
+        return Matrix4.LookAt(position, position + front, up);
     }
 
     public void RotateAround(Vector3 target, Vector2 rotation, float offset)
     {
         yaw = rotation.X + MathHelper.DegreesToRadians(90);
         pitch = rotation.Y;
-        
-        UpdateVectors();
-        Position = target + front * offset;
+        front.X = MathF.Cos(pitch) * MathF.Cos(yaw);
+        front.Y = MathF.Sin(pitch);
+        front.Z = MathF.Cos(pitch) * MathF.Sin(yaw);
+        front = Vector3.Normalize(front);
+        right = Vector3.Normalize(Vector3.Cross(front, Vector3.UnitY));
+        up = Vector3.Normalize(Vector3.Cross(right, front));
+        position = target + front * offset;
     }
 }
