@@ -80,6 +80,7 @@ namespace Project
         {
             base.OnUnload();
             shader.Destroy();
+            File.Delete("imgui.ini");
         }
 
         protected override void OnUpdateFrame(FrameEventArgs args)
