@@ -161,7 +161,7 @@ class Window : GameWindow
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "serialization:");
         if (ImGui.Button("save", new System.Numerics.Vector2(itemsWidth, 0))) voxels.Save();
         if (ImGui.Button("load", new System.Numerics.Vector2(itemsWidth, 0))) voxels.Load();
-        if (ImGui.Button("clear", new System.Numerics.Vector2(itemsWidth, 0))) voxels.LoadSphere();
+        if (ImGui.Button("clear", new System.Numerics.Vector2(itemsWidth, 0))) voxels.LoadNoise();
 
         // imgui end
         ImGui.End();

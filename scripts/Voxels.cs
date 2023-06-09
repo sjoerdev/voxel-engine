@@ -12,7 +12,7 @@ public class Voxels
     public Voxels(Vector3i size)
     {
         this.size = size;
-        LoadSphere();
+        LoadNoise();
     }
 
     public void Save()
@@ -41,6 +41,23 @@ public class Voxels
             }
         }
         array = sphere;
+        GenTexture();
+    }
+
+    public void LoadNoise()
+    {
+        float[,,] noise = new float[size.X, size.Y, size.Z];
+        for (int x = 0; x < size.X; x++)
+        {
+            for (int y = 0; y < size.Y; y++)
+            {
+                for (int z = 0; z < size.Z; z++)
+                {
+                    noise[x, y, z] = Noise.CalcPixel3D(x, y, z, 0.01f) / 255 - 0.5f;
+                }
+            }
+        }
+        array = noise;
         GenTexture();
     }
 
@@ -123,17 +140,17 @@ public class Voxels
                             array[worldCoord.X, worldCoord.Y, worldCoord.Z + 1] > 0 ||
                             array[worldCoord.X, worldCoord.Y, worldCoord.Z - 1] > 0;
 
-                            if (currentWorldSpaceValue == 0 && isInRadius && isOnSurface) voxelsToChange.Add(localCoord);
+                            if (currentWorldSpaceValue <= 0 && isInRadius && isOnSurface) voxelsToChange.Add(localCoord);
                         }
                         else
                         {
                             bool isSurface = 
-                            array[worldCoord.X + 1, worldCoord.Y, worldCoord.Z] == 0 || 
-                            array[worldCoord.X - 1, worldCoord.Y, worldCoord.Z] == 0 ||
-                            array[worldCoord.X, worldCoord.Y + 1, worldCoord.Z] == 0 ||
-                            array[worldCoord.X, worldCoord.Y - 1, worldCoord.Z] == 0 ||
-                            array[worldCoord.X, worldCoord.Y, worldCoord.Z + 1] == 0 ||
-                            array[worldCoord.X, worldCoord.Y, worldCoord.Z - 1] == 0;
+                            array[worldCoord.X + 1, worldCoord.Y, worldCoord.Z] <= 0 || 
+                            array[worldCoord.X - 1, worldCoord.Y, worldCoord.Z] <= 0 ||
+                            array[worldCoord.X, worldCoord.Y + 1, worldCoord.Z] <= 0 ||
+                            array[worldCoord.X, worldCoord.Y - 1, worldCoord.Z] <= 0 ||
+                            array[worldCoord.X, worldCoord.Y, worldCoord.Z + 1] <= 0 ||
+                            array[worldCoord.X, worldCoord.Y, worldCoord.Z - 1] <= 0;
 
                             if (currentWorldSpaceValue > 0 && isInRadius && isSurface) voxelsToChange.Add(localCoord);
                         }
