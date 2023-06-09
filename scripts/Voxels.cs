@@ -86,101 +86,69 @@ public class Voxels
         GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureWrapR, (int)TextureWrapMode.ClampToBorder);
     }
 
-    // voxel sculpting, if value == 0, instead of adding voxels you will remove them
+    // voxel sculpting, if value <= 0, instead of adding voxels you will remove them
     public void SculptVoxelData(Vector3i position, int radius, float value)
     {
-        GL.BindTexture(TextureTarget.Texture3D, texture);
-
+        Vector3i corner = position - Vector3i.One * radius / 2;
         float[,,] newSubData = new float[radius, radius, radius];
 
-        position = position - Vector3i.One * radius / 2;
-
+        // clamp subdata corner inside voxel data
         Vector3i delta = new Vector3i();
-        if (position.X < 0) delta.X = position.X;
-        if (position.Y < 0) delta.Y = position.Y;
-        if (position.Z < 0) delta.Z = position.Z;
-        if (position.X > size.X - radius) delta.X = radius - (size.X - position.X);
-        if (position.Y > size.Y - radius) delta.Y = radius - (size.Y - position.Y);
-        if (position.Z > size.Z - radius) delta.Z = radius - (size.Z - position.Z);
-        position -= delta;
+        if (corner.X < 0) delta.X = corner.X;
+        if (corner.Y < 0) delta.Y = corner.Y;
+        if (corner.Z < 0) delta.Z = corner.Z;
+        if (corner.X > size.X - radius) delta.X = radius - (size.X - corner.X);
+        if (corner.Y > size.Y - radius) delta.Y = radius - (size.Y - corner.Y);
+        if (corner.Z > size.Z - radius) delta.Z = radius - (size.Z - corner.Z);
+        corner -= delta;
 
+        // calculate chich voxels to change
         List<Vector3i> voxelsToChange = new List<Vector3i>();
-
         for (int x = 0; x < radius; x++)
         {
             for (int y = 0; y < radius; y++)
             {
                 for (int z = 0; z < radius; z++)
                 {
-                    bool isInBounds = 
-                    IsInBounds(position + new Vector3(x, y, z), array) &&
-                    IsInBounds(position + new Vector3(x + 1, y, z), array) &&
-                    IsInBounds(position + new Vector3(x - 1, y, z), array) &&
-                    IsInBounds(position + new Vector3(x, y + 1, z), array) &&
-                    IsInBounds(position + new Vector3(x, y - 1, z), array) &&
-                    IsInBounds(position + new Vector3(x, y, z + 1), array) &&
-                    IsInBounds(position + new Vector3(x, y, z - 1), array);
+                    Vector3i localCoord = new Vector3i(x, y, z);
+                    Vector3i worldCoord = corner + localCoord;
 
-                    if (isInBounds)
+                    // set subdata voxel to current voxel before changing it to anything else
+                    float currentWorldSpaceValue = array[worldCoord.X, worldCoord.Y, worldCoord.Z];
+                    newSubData[localCoord.Z, localCoord.Y, localCoord.X] = currentWorldSpaceValue;
+
+                    bool inInBoundsMinusOne = worldCoord.X > 0 && worldCoord.Y > 0 && worldCoord.Z > 0 && worldCoord.X < size.X - 1 && worldCoord.Y < size.Y - 1 && worldCoord.Z < size.Z - 1;
+
+                    if (inInBoundsMinusOne)
                     {
-                        Vector3i localCoord = new Vector3i(x, y, z);
-                        Vector3i worldCoord = position + localCoord;
-                        
+                        // flag surface voxels for change depending on if we are removing or adding voxels
                         bool isInRadius = Vector3.Distance(localCoord - delta, new Vector3(radius, radius , radius) / 2) < radius / 2;
-
-                        float currentWorldSpaceValue = array[worldCoord.X, worldCoord.Y, worldCoord.Z];
-
-                        if (value > 0)
-                        {
-                            bool isOnSurface = 
-                            array[worldCoord.X + 1, worldCoord.Y, worldCoord.Z] > 0 || 
-                            array[worldCoord.X - 1, worldCoord.Y, worldCoord.Z] > 0 ||
-                            array[worldCoord.X, worldCoord.Y + 1, worldCoord.Z] > 0 ||
-                            array[worldCoord.X, worldCoord.Y - 1, worldCoord.Z] > 0 ||
-                            array[worldCoord.X, worldCoord.Y, worldCoord.Z + 1] > 0 ||
-                            array[worldCoord.X, worldCoord.Y, worldCoord.Z - 1] > 0;
-
-                            if (currentWorldSpaceValue <= 0 && isInRadius && isOnSurface) voxelsToChange.Add(localCoord);
-                        }
-                        else
-                        {
-                            bool isSurface = 
-                            array[worldCoord.X + 1, worldCoord.Y, worldCoord.Z] <= 0 || 
-                            array[worldCoord.X - 1, worldCoord.Y, worldCoord.Z] <= 0 ||
-                            array[worldCoord.X, worldCoord.Y + 1, worldCoord.Z] <= 0 ||
-                            array[worldCoord.X, worldCoord.Y - 1, worldCoord.Z] <= 0 ||
-                            array[worldCoord.X, worldCoord.Y, worldCoord.Z + 1] <= 0 ||
-                            array[worldCoord.X, worldCoord.Y, worldCoord.Z - 1] <= 0;
-
-                            if (currentWorldSpaceValue > 0 && isInRadius && isSurface) voxelsToChange.Add(localCoord);
-                        }
-
-                        newSubData[localCoord.Z, localCoord.Y, localCoord.X] = currentWorldSpaceValue;
-                        array[worldCoord.X, worldCoord.Y, worldCoord.Z] = currentWorldSpaceValue;
+                        bool shouldAdd = value > 0 && currentWorldSpaceValue <= 0 && isInRadius && IsVoxelOnSurface(worldCoord);
+                        bool shouldRemove = value <= 0 && currentWorldSpaceValue > 0 && isInRadius && IsVoxelSurface(worldCoord);
+                        if (shouldAdd || shouldRemove) voxelsToChange.Add(localCoord);
                     }
                 }
             }
         }
         
+        // change voxels that need changing
         for (int i = 0; i < voxelsToChange.Count; i++)
         {
             Vector3i localCoord = voxelsToChange[i];
-            Vector3i worldCoord = position + localCoord;
-
+            Vector3i worldCoord = corner + localCoord;
             newSubData[localCoord.Z, localCoord.Y, localCoord.X] = value;
             array[worldCoord.X, worldCoord.Y, worldCoord.Z] = value;
         }
 
-        GL.TexSubImage3D(TextureTarget.Texture3D, 0, position.X, position.Y, position.Z, radius, radius, radius, PixelFormat.Red, PixelType.Float, newSubData);
+        // update texture
+        GL.BindTexture(TextureTarget.Texture3D, texture);
+        GL.TexSubImage3D(TextureTarget.Texture3D, 0, corner.X, corner.Y, corner.Z, radius, radius, radius, PixelFormat.Red, PixelType.Float, newSubData);
     }
 
     public Vector3i VoxelTrace(Vector3 pos, Vector3 dir, int maxSteps)
     {
-        Vector3i coord = new Vector3i(((int)MathF.Floor(pos.X)), ((int)MathF.Floor(pos.Y)), ((int)MathF.Floor(pos.Z)));
         Vector3 tdelta;
         float tx, ty, tz;
-        float steps = 0;
-        Vector3i result;
 
         if (dir.X < 0)
         {
@@ -212,6 +180,10 @@ public class Voxels
             tdelta.Z = 1 / dir.Z;
             tz = ((MathF.Floor(pos.Z / 1) + 1) * 1 - pos.Z) / dir.Z;
         }
+
+        Vector3i coord = (Vector3i)pos;
+        float steps = 0;
+        Vector3i result;
 
         // tracing through the grid
         while (true)
@@ -273,5 +245,29 @@ public class Voxels
         bool yIs = coord.Y >= data.GetLowerBound(1) && coord.Y <= data.GetUpperBound(1);
         bool zIs = coord.Z >= data.GetLowerBound(2) && coord.Z <= data.GetUpperBound(2);
         return xIs && yIs && zIs;
+    }
+
+    public bool IsVoxelOnSurface(Vector3i pos)
+    {
+        bool isOnSurface = 
+        array[pos.X + 1, pos.Y, pos.Z] > 0 || 
+        array[pos.X - 1, pos.Y, pos.Z] > 0 ||
+        array[pos.X, pos.Y + 1, pos.Z] > 0 ||
+        array[pos.X, pos.Y - 1, pos.Z] > 0 ||
+        array[pos.X, pos.Y, pos.Z + 1] > 0 ||
+        array[pos.X, pos.Y, pos.Z - 1] > 0;
+        return isOnSurface;
+    }
+
+    public bool IsVoxelSurface(Vector3i pos)
+    {
+        bool isSurface = 
+        array[pos.X + 1, pos.Y, pos.Z] <= 0 || 
+        array[pos.X - 1, pos.Y, pos.Z] <= 0 ||
+        array[pos.X, pos.Y + 1, pos.Z] <= 0 ||
+        array[pos.X, pos.Y - 1, pos.Z] <= 0 ||
+        array[pos.X, pos.Y, pos.Z + 1] <= 0 ||
+        array[pos.X, pos.Y, pos.Z - 1] <= 0;
+        return isSurface;
     }
 }
