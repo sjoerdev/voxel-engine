@@ -16,5 +16,5 @@ This is a voxel engine. In 3D computer graphics, a voxel represents a value on a
 - a .NET runtime compatible operating system
 
 ## Gallery:
-<img width="720" alt="2" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/13696915-6334-4d17-a42c-de377a9801c8">
 <img width="720" alt="3" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/b81cca90-8e9b-4411-8906-a7aacf65d9bf">
+<img width="720" alt="2" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/13696915-6334-4d17-a42c-de377a9801c8">
