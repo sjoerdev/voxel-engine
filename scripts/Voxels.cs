@@ -117,16 +117,11 @@ public class Voxels
                     float currentWorldSpaceValue = array[worldCoord.X, worldCoord.Y, worldCoord.Z];
                     newSubData[localCoord.Z, localCoord.Y, localCoord.X] = currentWorldSpaceValue;
 
-                    bool inInBoundsMinusOne = worldCoord.X > 0 && worldCoord.Y > 0 && worldCoord.Z > 0 && worldCoord.X < size.X - 1 && worldCoord.Y < size.Y - 1 && worldCoord.Z < size.Z - 1;
-
-                    if (inInBoundsMinusOne)
-                    {
-                        // flag surface voxels for change depending on if we are removing or adding voxels
-                        bool isInRadius = Vector3.Distance(localCoord - delta, new Vector3(radius, radius , radius) / 2) < radius / 2;
-                        bool shouldAdd = value > 0 && currentWorldSpaceValue <= 0 && isInRadius && IsVoxelOnSurface(worldCoord);
-                        bool shouldRemove = value <= 0 && currentWorldSpaceValue > 0 && isInRadius && IsVoxelSurface(worldCoord);
-                        if (shouldAdd || shouldRemove) voxelsToChange.Add(localCoord);
-                    }
+                    // flag surface voxels for change depending on if we are removing or adding voxels
+                    bool isInRadius = Vector3.Distance(localCoord - delta, new Vector3(radius, radius , radius) / 2) < radius / 2;
+                    bool shouldAdd = value > 0 && currentWorldSpaceValue <= 0 && isInRadius && IsVoxelOnSurface(worldCoord);
+                    bool shouldRemove = value <= 0 && currentWorldSpaceValue > 0 && isInRadius && IsVoxelSurface(worldCoord);
+                    if (shouldAdd || shouldRemove) voxelsToChange.Add(localCoord);
                 }
             }
         }
@@ -250,24 +245,30 @@ public class Voxels
     public bool IsVoxelOnSurface(Vector3i pos)
     {
         bool isOnSurface = 
-        array[pos.X + 1, pos.Y, pos.Z] > 0 || 
-        array[pos.X - 1, pos.Y, pos.Z] > 0 ||
-        array[pos.X, pos.Y + 1, pos.Z] > 0 ||
-        array[pos.X, pos.Y - 1, pos.Z] > 0 ||
-        array[pos.X, pos.Y, pos.Z + 1] > 0 ||
-        array[pos.X, pos.Y, pos.Z - 1] > 0;
+        TryGetVoxelValue(new Vector3i(pos.X + 1, pos.Y, pos.Z)) > 0 ||
+        TryGetVoxelValue(new Vector3i(pos.X - 1, pos.Y, pos.Z)) > 0 ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y + 1, pos.Z)) > 0 ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y - 1, pos.Z)) > 0 ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z + 1)) > 0 ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z - 1)) > 0;
         return isOnSurface;
     }
 
     public bool IsVoxelSurface(Vector3i pos)
     {
         bool isSurface = 
-        array[pos.X + 1, pos.Y, pos.Z] <= 0 || 
-        array[pos.X - 1, pos.Y, pos.Z] <= 0 ||
-        array[pos.X, pos.Y + 1, pos.Z] <= 0 ||
-        array[pos.X, pos.Y - 1, pos.Z] <= 0 ||
-        array[pos.X, pos.Y, pos.Z + 1] <= 0 ||
-        array[pos.X, pos.Y, pos.Z - 1] <= 0;
+        TryGetVoxelValue(new Vector3i(pos.X + 1, pos.Y, pos.Z)) <= 0 || 
+        TryGetVoxelValue(new Vector3i(pos.X - 1, pos.Y, pos.Z)) <= 0 ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y + 1, pos.Z)) <= 0 ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y - 1, pos.Z)) <= 0 ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z + 1)) <= 0 ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z - 1)) <= 0;
         return isSurface;
+    }
+
+    public float TryGetVoxelValue(Vector3i pos)
+    {
+        if (!IsInBounds(pos, array)) return 0;
+        else return array[pos.X, pos.Y, pos.Z];
     }
 }
