@@ -9,6 +9,7 @@ This is a voxel engine. In 3D computer graphics, a voxel represents a value on a
 - voxel data serialization
 - real time voxel editing (sculpting)
 - support for a whide range of gpu's
+- 3d simplex noise data generation
 
 ## System Requirements:
 - an OpenGL 3.3 capable graphics card
