@@ -27,14 +27,15 @@ class Window : GameWindow
     bool firstMouseMovement = true;
     Vector2 lastMousePos;
     Vector2 camOrbitRotation;
-    float cameraDistance = 200;
+    float cameraDistance = 600;
     int voxelTraceSteps = 600;
     bool canvasAABBcheck = true;
     bool normalAsAlbedo = false;
     bool visualizeSteps = false;
     int currentBrushType = 0;
-    int brushSize = 16;
-    float hue = 0.001f;
+    int currentDataSetType = 0;
+    int brushSize = 24;
+    float hue = 0.25f;
     float sculptTick = 0;
     float brushSpeed = 30;
 
@@ -161,7 +162,18 @@ class Window : GameWindow
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "serialization:");
         if (ImGui.Button("save", new System.Numerics.Vector2(itemsWidth, 0))) voxels.Save();
         if (ImGui.Button("load", new System.Numerics.Vector2(itemsWidth, 0))) voxels.Load();
-        if (ImGui.Button("clear", new System.Numerics.Vector2(itemsWidth, 0))) voxels.LoadNoise();
+
+        // imgui dataset generation
+        for (int i = 0; i < 2; i++) ImGui.Spacing();
+        ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "dataset generation:");
+        string[] dataSetType = new string[3]{"sphere", "simplex noise", "jawbreaker"};
+        ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("dataset type", ref currentDataSetType, dataSetType, dataSetType.Length);
+        if (ImGui.Button("generate", new System.Numerics.Vector2(itemsWidth, 0)))
+        {
+            if (currentDataSetType == 0) voxels.LoadSphere();
+            if (currentDataSetType == 1) voxels.LoadNoise();
+            if (currentDataSetType == 2) voxels.LoadJawBreaker();
+        }
 
         // imgui end
         ImGui.End();

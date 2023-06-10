@@ -35,7 +35,7 @@ public class Voxels
             {
                 for (int z = 0; z < size.Z; z++)
                 {
-                    if (Vector3.Distance(new Vector3(x, y, z), (new Vector3(size.X, size.Y, size.Z) / 2)) < 64) sphere[x, y, z] = 0.6f;
+                    if (Vector3.Distance(new Vector3(x, y, z), (new Vector3(size.X, size.Y, size.Z) / 2)) < 100) sphere[x, y, z] = 0.6f;
                     else sphere[x, y, z] = 0;
                 }
             }
@@ -46,6 +46,8 @@ public class Voxels
 
     public void LoadNoise()
     {
+        Random random = new Random();
+        Noise.Seed = random.Next(100, 10000);
         float[,,] noise = new float[size.X, size.Y, size.Z];
         for (int x = 0; x < size.X; x++)
         {
@@ -53,7 +55,26 @@ public class Voxels
             {
                 for (int z = 0; z < size.Z; z++)
                 {
-                    noise[x, y, z] = Noise.CalcPixel3D(x, y, z, 0.01f) / 255 - 0.5f;
+                    if (Noise.CalcPixel3D(x, y, z, 0.0075f) / 255 > 0.5f) noise[x, y, z] = 0.6f;
+                }
+            }
+        }
+        array = noise;
+        GenTexture();
+    }
+
+    public void LoadJawBreaker()
+    {
+        Random random = new Random();
+        Noise.Seed = random.Next(100, 10000);
+        float[,,] noise = new float[size.X, size.Y, size.Z];
+        for (int x = 0; x < size.X; x++)
+        {
+            for (int y = 0; y < size.Y; y++)
+            {
+                for (int z = 0; z < size.Z; z++)
+                {
+                    noise[x, y, z] = (Noise.CalcPixel3D(x, y, z, 0.0075f) / 255 - 0.5f) * 8;
                 }
             }
         }
