@@ -29,7 +29,8 @@ public class Voxels
     public void LoadSphere()
     {
         float[,,] sphere = new float[size.X, size.Y, size.Z];
-        for (int x = 0; x < size.X; x++)
+
+        Parallel.For(0, size.X, x =>
         {
             for (int y = 0; y < size.Y; y++)
             {
@@ -39,7 +40,8 @@ public class Voxels
                     else sphere[x, y, z] = 0;
                 }
             }
-        }
+        });
+
         array = sphere;
         GenTexture();
     }
@@ -49,7 +51,8 @@ public class Voxels
         Random random = new Random();
         Noise.Seed = random.Next(100, 10000);
         float[,,] noise = new float[size.X, size.Y, size.Z];
-        for (int x = 0; x < size.X; x++)
+
+        Parallel.For(0, size.X, x =>
         {
             for (int y = 0; y < size.Y; y++)
             {
@@ -58,7 +61,8 @@ public class Voxels
                     if (Noise.CalcPixel3D(x, y, z, 0.0075f) / 255 > 0.5f) noise[x, y, z] = 0.6f;
                 }
             }
-        }
+        });
+
         array = noise;
         GenTexture();
     }
@@ -68,7 +72,8 @@ public class Voxels
         Random random = new Random();
         Noise.Seed = random.Next(100, 10000);
         float[,,] noise = new float[size.X, size.Y, size.Z];
-        for (int x = 0; x < size.X; x++)
+
+        Parallel.For(0, size.X, x =>
         {
             for (int y = 0; y < size.Y; y++)
             {
@@ -77,7 +82,8 @@ public class Voxels
                     noise[x, y, z] = (Noise.CalcPixel3D(x, y, z, 0.0075f) / 255 - 0.5f) * 8;
                 }
             }
-        }
+        });
+
         array = noise;
         GenTexture();
     }
@@ -86,7 +92,8 @@ public class Voxels
     {
         // rotate data (dont know why this is needed, but whatever, it works)
         float[,,] rotated = new float[size.Z, size.Y, size.X];
-        for (int x = 0; x < size.X; x++)
+
+        Parallel.For(0, size.X, x =>
         {
             for (int y = 0; y < size.Y; y++)
             {
@@ -95,7 +102,7 @@ public class Voxels
                     rotated[z, y, x] = array[x, y, z];
                 }
             }
-        }
+        });
 
         texture = GL.GenTexture();
         GL.BindTexture(TextureTarget.Texture3D, texture);
