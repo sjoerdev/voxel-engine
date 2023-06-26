@@ -38,6 +38,7 @@ class Window : GameWindow
     float hue = 0.25f;
     float sculptTick = 0;
     float brushSpeed = 30;
+    bool vsync = true;
 
     static NativeWindowSettings windowSettings = new NativeWindowSettings()
     {
@@ -85,6 +86,7 @@ class Window : GameWindow
     {
         base.OnUpdateFrame(args);
         timePassed += (float)args.Time;
+        VSync = vsync ? VSyncMode.On : VSyncMode.Off;
         var mouse = MouseState;
         var input = KeyboardState;
         if (!IsFocused) return;
@@ -155,6 +157,7 @@ class Window : GameWindow
         // imgui rendering settings
         for (int i = 0; i < 2; i++) ImGui.Spacing();
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "rendering settings:");
+        ImGui.Checkbox("vsync", ref vsync);
         ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
         ImGui.Checkbox("visualize steps", ref visualizeSteps);
         ImGui.Checkbox("canvas aabb check", ref canvasAABBcheck);
