@@ -12,8 +12,8 @@ This is a voxel engine. In 3D computer graphics, a voxel represents a value on a
 - 3d simplex noise data generation
 
 ## System Requirements:
-- an OpenGL 3.3 capable graphics card
-- a .NET runtime compatible operating system
+- Windows with .NET 7 runtime
+- OpenGL 3.3 capable GPU
 
 ## Gallery:
 <img width="720" alt="3" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/b81cca90-8e9b-4411-8906-a7aacf65d9bf">
