@@ -39,11 +39,14 @@ class Window : GameWindow
     float sculptTick = 0;
     float brushSpeed = 30;
 
-    public Window() : base(GameWindowSettings.Default, NativeWindowSettings.Default)
+    static NativeWindowSettings windowSettings = new NativeWindowSettings()
     {
-        this.CenterWindow(new Vector2i(1280, 720));
-        Title = "Sjoerd's Voxel Engine";
-    }
+        Title = "Sjoerd's Voxel Engine",
+        APIVersion = new System.Version(3, 3),
+        Size = new OpenTK.Mathematics.Vector2i(1280, 720)
+    };
+
+    public Window() : base(GameWindowSettings.Default, windowSettings) { }
 
     protected override void OnResize(ResizeEventArgs args)
     {
