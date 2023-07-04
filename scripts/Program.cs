@@ -76,7 +76,6 @@ class Window : GameWindow
     protected override void OnUnload()
     {
         base.OnUnload();
-        shader.Destroy();
         File.Delete("imgui.ini");
     }
 
@@ -120,7 +119,6 @@ class Window : GameWindow
     {
         base.OnRenderFrame(args);
         imguiHelper.Update(this, (float)args.Time);
-        shader.Use();
         frametimes.Add(((float)args.Time));
 
         // imgui start

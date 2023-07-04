@@ -39,6 +39,8 @@ public class Shader
         GL.DeleteShader(vbo);
         GL.DeleteShader(frag);
 
+        GL.UseProgram(handle);
+
         float[] vertices = new float[]
         {
             -1f, 1f, 0f,
@@ -60,6 +62,28 @@ public class Shader
         GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
         GL.EnableVertexAttribArray(0);
         GL.BindVertexArray(0);
+    }
+
+    public void Render()
+    {
+        GL.Clear(ClearBufferMask.ColorBufferBit);
+        GL.UseProgram(handle);
+        GL.BindVertexArray(vao);
+        GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+    }
+
+    public void SetVoxelData(Voxels data, string name)
+    {
+        GL.Uniform1(GL.GetUniformLocation(handle, name), 0);
+        GL.ActiveTexture(TextureUnit.Texture0);
+        GL.BindTexture(TextureTarget.Texture3D, data.texture);
+    }
+
+    public void SetCamera(Camera camera, string viewMatrixName, string cameraPositionName)
+    {
+        var viewMatrix = camera.GetViewMatrix();
+        GL.UniformMatrix4(GL.GetUniformLocation(handle, viewMatrixName), true, ref viewMatrix);
+        GL.Uniform3(GL.GetUniformLocation(handle, cameraPositionName), camera.position.X, camera.position.Y, camera.position.Z);
     }
 
     public void SetViewport(Vector2i resolution)
@@ -90,40 +114,5 @@ public class Shader
     public void SetVector3(string name, Vector3 value)
     {
         GL.Uniform3(GL.GetUniformLocation(handle, name), value.X, value.Y, value.Z);
-    }
-
-    public void SetCamera(Camera camera, string viewMatrixName, string cameraPositionName)
-    {
-        var viewMatrix = camera.GetViewMatrix();
-        GL.UniformMatrix4(GL.GetUniformLocation(handle, viewMatrixName), true, ref viewMatrix);
-        GL.Uniform3(GL.GetUniformLocation(handle, cameraPositionName), camera.position.X, camera.position.Y, camera.position.Z);
-    }
-
-    public void SetVoxelData(Voxels data, string name)
-    {
-        GL.Uniform1(GL.GetUniformLocation(handle, name), 0);
-        GL.ActiveTexture(TextureUnit.Texture0);
-        GL.BindTexture(TextureTarget.Texture3D, data.texture);
-    }
-
-    public void Use()
-    {
-        GL.Clear(ClearBufferMask.ColorBufferBit);
-        GL.UseProgram(handle);
-    }
-
-    public void Render()
-    {
-        GL.UseProgram(handle);
-        GL.BindVertexArray(vao);
-        GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
-    }
-
-    public void Destroy()
-    {
-        GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-        GL.DeleteBuffer(vbo);
-        GL.UseProgram(0);
-        GL.DeleteProgram(vao);
     }
 }
