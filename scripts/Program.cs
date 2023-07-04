@@ -53,7 +53,6 @@ class Window : GameWindow
     {
         base.OnResize(args);
         if (shader != null) shader.SetViewport(Size);
-        if (camera != null) camera.aspect = Size.X / Size.Y;
         if (imguiHelper != null) imguiHelper.WindowResized(Size.X, Size.Y);
     }
 
@@ -68,8 +67,7 @@ class Window : GameWindow
         voxels = new Voxels(new Vector3i(256, 256, 256));
 
         // setup camera
-        var pos = new Vector3(voxels.size.X / 2, voxels.size.Y / 2, voxels.size.Z * 2);
-        camera = new Camera(pos, Size.X / Size.Y);
+        camera = new Camera();
 
         // setup imgui
         imguiHelper = new ImGuiHelper(Size.X, Size.Y);

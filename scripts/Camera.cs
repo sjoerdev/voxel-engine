@@ -4,19 +4,12 @@ namespace Project;
 
 public class Camera
 {
+    public Vector3 position;
     private Vector3 front;
     private Vector3 up;
     private Vector3 right;
     private float pitch;
     private float yaw;
-    public Vector3 position;
-    public float aspect;
-
-    public Camera(Vector3 position, float aspect)
-    {
-        this.position = position;
-        this.aspect = aspect;
-    }
 
     public Matrix4 GetViewMatrix()
     {
@@ -25,12 +18,9 @@ public class Camera
 
     public void RotateAround(Vector3 target, Vector2 rotation, float offset)
     {
-        yaw = rotation.X + MathHelper.DegreesToRadians(90);
         pitch = rotation.Y;
-        front.X = MathF.Cos(pitch) * MathF.Cos(yaw);
-        front.Y = MathF.Sin(pitch);
-        front.Z = MathF.Cos(pitch) * MathF.Sin(yaw);
-        front = Vector3.Normalize(front);
+        yaw = rotation.X + MathHelper.DegreesToRadians(90);
+        front = new Vector3(MathF.Cos(pitch) * MathF.Cos(yaw), MathF.Sin(pitch), MathF.Cos(pitch) * MathF.Sin(yaw)).Normalized();
         right = Vector3.Normalize(Vector3.Cross(front, Vector3.UnitY));
         up = Vector3.Normalize(Vector3.Cross(right, front));
         position = target + front * offset;
