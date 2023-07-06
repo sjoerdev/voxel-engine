@@ -24,10 +24,12 @@ class Window : GameWindow
 
     float timePassed;
     List<float> frametimes = new List<float>();
+
     bool firstMouseMovement = true;
     Vector2 lastMousePos;
     Vector2 camOrbitRotation;
     float cameraDistance = 600;
+
     int voxelTraceSteps = 600;
     bool canvasAABBcheck = true;
     bool normalAsAlbedo = false;
@@ -82,8 +84,14 @@ class Window : GameWindow
     protected override void OnUpdateFrame(FrameEventArgs args)
     {
         base.OnUpdateFrame(args);
-        timePassed += (float)args.Time;
+
+        // update vars
         VSync = vsync ? VSyncMode.On : VSyncMode.Off;
+        timePassed += (float)args.Time;
+        frametimes.Add(((float)args.Time));
+        imguiHelper.Update(this, (float)args.Time);
+
+        // start input
         var mouse = MouseState;
         var input = KeyboardState;
         if (!IsFocused) return;
@@ -95,7 +103,7 @@ class Window : GameWindow
             float aspect = (float)Size.X / (float)Size.Y;
             var uv = ndc * new Vector2(aspect, 1);
             Vector3 dir = (camera.GetViewMatrix() * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
-            var position = voxels.VoxelTrace(camera.position, dir, 9999);
+            var position = voxels.VoxelTrace(camera.position, dir, 10000);
             if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxels.SculptVoxelData(position, brushSize, hue);
             if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxels.SculptVoxelData(position, brushSize, 0);
             sculptTick += (1 / brushSpeed);
@@ -118,8 +126,6 @@ class Window : GameWindow
     protected override void OnRenderFrame(FrameEventArgs args)
     {
         base.OnRenderFrame(args);
-        imguiHelper.Update(this, (float)args.Time);
-        frametimes.Add(((float)args.Time));
 
         // imgui start
         ImGui.Begin("window");
@@ -180,7 +186,7 @@ class Window : GameWindow
         // imgui end
         ImGui.End();
 
-        // pass data to shader
+        // set shader uniforms
         shader.SetVector2("resolution", ((Vector2)Size));
         shader.SetFloat("iTime", timePassed);
         shader.SetBool("normalAsAlbedo", normalAsAlbedo);
