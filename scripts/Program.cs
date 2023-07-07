@@ -130,7 +130,8 @@ class Window : GameWindow
         base.OnRenderFrame(args);
 
         // imgui start
-        ImGui.Begin("window");
+        ImGui.Begin("settings");
+        ImGui.GetStyle().FrameRounding = 2;
         int itemsWidth = 180;
 
         // imgui metrics
