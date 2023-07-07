@@ -41,6 +41,7 @@ class Window : GameWindow
     float sculptTick = 0;
     float brushSpeed = 30;
     bool vsync = true;
+    bool fullscreen;
 
     static NativeWindowSettings windowSettings = new NativeWindowSettings()
     {
@@ -160,6 +161,16 @@ class Window : GameWindow
         for (int i = 0; i < 2; i++) ImGui.Spacing();
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "rendering settings:");
         ImGui.Checkbox("vsync", ref vsync);
+        if (ImGui.Checkbox("fullscreen", ref fullscreen))
+        {
+            if (fullscreen) WindowState = WindowState.Fullscreen;
+            else
+            {
+                WindowState = WindowState.Normal;
+                Size = new Vector2i(1280, 720);
+                CenterWindow();
+            }
+        }
         ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
         ImGui.Checkbox("visualize steps", ref visualizeSteps);
         ImGui.Checkbox("canvas aabb check", ref canvasAABBcheck);
