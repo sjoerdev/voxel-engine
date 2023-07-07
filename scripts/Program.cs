@@ -32,7 +32,7 @@ class Window : GameWindow
 
     int voxelTraceSteps = 600;
     bool canvasAABBcheck = true;
-    bool normalAsAlbedo = false;
+    bool visualizeNormals = false;
     bool visualizeSteps = false;
     int currentBrushType = 0;
     int currentDataSetType = 0;
@@ -42,7 +42,6 @@ class Window : GameWindow
     float brushSpeed = 30;
     bool vsync = true;
     bool fullscreen;
-    bool lighting = true;
 
     static NativeWindowSettings windowSettings = new NativeWindowSettings()
     {
@@ -179,8 +178,7 @@ class Window : GameWindow
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "rendering settings:");
         ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref voxelTraceSteps, 10, 1000);
         ImGui.Checkbox("canvas aabb check", ref canvasAABBcheck);
-        ImGui.Checkbox("lighting", ref lighting);
-        ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
+        ImGui.Checkbox("visualize normals", ref visualizeNormals);
         ImGui.Checkbox("visualize steps", ref visualizeSteps);
 
         // imgui serialization
@@ -207,10 +205,9 @@ class Window : GameWindow
         // set shader uniforms
         shader.SetVector2("resolution", ((Vector2)Size));
         shader.SetFloat("iTime", timePassed);
-        shader.SetBool("normalAsAlbedo", normalAsAlbedo);
+        shader.SetBool("visualizeNormals", visualizeNormals);
         shader.SetBool("visualizeSteps", visualizeSteps);
         shader.SetBool("canvasAABBcheck", canvasAABBcheck);
-        shader.SetBool("lighting", lighting);
         shader.SetInt("voxelTraceSteps", voxelTraceSteps);
         shader.SetVector3("dataSize", ((Vector3)voxels.size));
         shader.SetCamera(camera, "view", "camPos");

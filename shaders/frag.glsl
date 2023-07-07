@@ -9,11 +9,10 @@ uniform vec2 resolution;
 uniform float iTime;
 
 uniform bool canvasAABBcheck;
-uniform bool normalAsAlbedo;
+uniform bool visualizeNormals;
 uniform bool visualizeSteps;
 uniform float sdfNormalPrecision;
 uniform int voxelTraceSteps;
-uniform bool lighting;
 
 uniform vec3 camPos;
 uniform mat4 view;
@@ -246,11 +245,8 @@ void main()
         fragColor = bgc;
 		return;
     }
-
-    // normal as albedo for debugging
-    if (normalAsAlbedo) albedo = normal * 0.5 + 0.5;
     
     // return result
-    if (lighting) fragColor = vec4(albedo * diffuse + specular, 1.0);
-    else fragColor = vec4(albedo, 1.0);
+    if (visualizeNormals) fragColor = vec4(normal * 0.5 + 0.5, 1.0);
+    else fragColor = vec4(albedo * diffuse + specular, 1.0);
 }
