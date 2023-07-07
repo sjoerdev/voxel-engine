@@ -157,9 +157,9 @@ class Window : GameWindow
         ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("brush hue", ref hue, 0.001f, 1);
         ImGui.StyleColorsDark();
 
-        // imgui rendering settings
+        // imgui display settings
         for (int i = 0; i < 2; i++) ImGui.Spacing();
-        ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "rendering settings:");
+        ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "display settings:");
         ImGui.Checkbox("vsync", ref vsync);
         if (ImGui.Checkbox("fullscreen", ref fullscreen))
         {
@@ -171,10 +171,14 @@ class Window : GameWindow
                 CenterWindow();
             }
         }
+
+        // imgui rendering settings
+        for (int i = 0; i < 2; i++) ImGui.Spacing();
+        ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "rendering settings:");
+        ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref voxelTraceSteps, 10, 1000);
+        ImGui.Checkbox("canvas aabb check", ref canvasAABBcheck);
         ImGui.Checkbox("use normal as albedo", ref normalAsAlbedo);
         ImGui.Checkbox("visualize steps", ref visualizeSteps);
-        ImGui.Checkbox("canvas aabb check", ref canvasAABBcheck);
-        ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref voxelTraceSteps, 10, 1000);
 
         // imgui serialization
         for (int i = 0; i < 2; i++) ImGui.Spacing();
