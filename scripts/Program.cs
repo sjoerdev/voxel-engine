@@ -42,6 +42,8 @@ class Window : GameWindow
     float brushSpeed = 30;
     bool vsync = true;
     bool fullscreen;
+    float shadowBias = 2;
+    bool shadows = true;
 
     static NativeWindowSettings windowSettings = new NativeWindowSettings()
     {
@@ -177,6 +179,8 @@ class Window : GameWindow
         for (int i = 0; i < 2; i++) ImGui.Spacing();
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "rendering settings:");
         ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref voxelTraceSteps, 10, 1000);
+        ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("shadow bias", ref shadowBias, 0.1f, 4);
+        ImGui.Checkbox("shadows", ref shadows);
         ImGui.Checkbox("canvas aabb check", ref canvasAABBcheck);
         ImGui.Checkbox("visualize normals", ref visualizeNormals);
         ImGui.Checkbox("visualize steps", ref visualizeSteps);
@@ -208,6 +212,8 @@ class Window : GameWindow
         shader.SetBool("visualizeNormals", visualizeNormals);
         shader.SetBool("visualizeSteps", visualizeSteps);
         shader.SetBool("canvasAABBcheck", canvasAABBcheck);
+        shader.SetBool("shadows", shadows);
+        shader.SetFloat("shadowBias", shadowBias);
         shader.SetInt("voxelTraceSteps", voxelTraceSteps);
         shader.SetVector3("dataSize", ((Vector3)voxels.size));
         shader.SetCamera(camera, "view", "camPos");

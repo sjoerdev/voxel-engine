@@ -11,7 +11,8 @@ uniform float iTime;
 uniform bool canvasAABBcheck;
 uniform bool visualizeNormals;
 uniform bool visualizeSteps;
-uniform float sdfNormalPrecision;
+uniform bool shadows;
+uniform float shadowBias;
 uniform int voxelTraceSteps;
 
 uniform vec3 camPos;
@@ -232,12 +233,21 @@ void main()
     vec3 lightdir = vec3(1, 0.6, 1);
     vec3 lightpos = normalize(lightdir * 10000);
 
+    // calc shadow
+    float lit = 1;
+    if (shadows)
+    {
+        vec3 startPos = VoxelCoord + lightdir + (normal * shadowBias);
+        vec3 shadowVoxel = VoxelTrace(startPos, lightdir, steps);
+        if (shadowVoxel != vec3(0)) lit = 0;
+    }
+
     // calc diffuse
-    float diffuse = max(0.3, dot(lightpos, normal));
+    float diffuse = max(0.0, lit * dot(lightpos, normal));
 
     // calc specular
     vec3 specularcolor = vec3(0.3, 0.3, 0.3);
-    vec3 specular = pow(clamp(dot(lightpos, normal), 0.0, 1.0), 64.0) * specularcolor;
+    vec3 specular = pow(clamp(dot(lightpos, normal), 0.0, 1.0), 64.0) * specularcolor * lit;
     
     // if nothing was hit
     if (VoxelCoord == vec3(0))
@@ -248,5 +258,5 @@ void main()
     
     // return result
     if (visualizeNormals) fragColor = vec4(normal * 0.5 + 0.5, 1.0);
-    else fragColor = vec4(albedo * diffuse + specular, 1.0);
+    else fragColor = vec4(albedo * (diffuse + 0.2) + specular, 1.0);
 }
