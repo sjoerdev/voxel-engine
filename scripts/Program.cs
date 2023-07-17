@@ -44,6 +44,7 @@ class Window : GameWindow
     bool fullscreen;
     float shadowBias = 2;
     bool shadows = true;
+    float renderScale = 0.5f;
 
     static NativeWindowSettings windowSettings = new NativeWindowSettings()
     {
@@ -54,19 +55,12 @@ class Window : GameWindow
 
     public Window() : base(GameWindowSettings.Default, windowSettings) { }
 
-    protected override void OnResize(ResizeEventArgs args)
-    {
-        base.OnResize(args);
-        if (shader != null) shader.SetViewport(Size);
-        if (imguiHelper != null) imguiHelper.WindowResized(Size.X, Size.Y);
-    }
-
     protected override void OnLoad()
     {
         base.OnLoad();
 
         // setup shader
-        shader = new Shader("shaders/vert.glsl", "shaders/frag.glsl");
+        shader = new Shader("shaders/vert.glsl", "shaders/frag.glsl", "shaders/post.glsl");
 
         // create voxel data
         voxels = new Voxels(new Vector3i(256, 256, 256));
@@ -163,6 +157,7 @@ class Window : GameWindow
         // imgui display settings
         for (int i = 0; i < 2; i++) ImGui.Spacing();
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "display settings:");
+        ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("resolution scale", ref renderScale, 0.1f, 1);
         ImGui.Checkbox("vsync", ref vsync);
         if (ImGui.Checkbox("fullscreen", ref fullscreen))
         {
@@ -207,6 +202,7 @@ class Window : GameWindow
         ImGui.End();
 
         // set shader uniforms
+        shader.UseMainProgram();
         shader.SetVector2("resolution", ((Vector2)Size));
         shader.SetFloat("iTime", timePassed);
         shader.SetBool("visualizeNormals", visualizeNormals);
@@ -220,9 +216,16 @@ class Window : GameWindow
         shader.SetVoxelData(voxels, "data");
 
         // render
-        shader.Render();
+        shader.RenderMain((int)(Size.X * renderScale), (int)(Size.Y * renderScale));
+        shader.RenderPost(Size.X, Size.Y);
         imguiHelper.Render();
         Context.SwapBuffers();
+    }
+
+    protected override void OnResize(ResizeEventArgs args)
+    {
+        base.OnResize(args);
+        imguiHelper.WindowResized(Size.X, Size.Y);
     }
 
     protected override void OnTextInput(TextInputEventArgs eventArgs)
