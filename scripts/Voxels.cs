@@ -104,6 +104,7 @@ public class Voxels
             }
         });
 
+        GL.DeleteTexture(texture);
         texture = GL.GenTexture();
         GL.BindTexture(TextureTarget.Texture3D, texture);
         GL.TexImage3D(TextureTarget.Texture3D, 0, PixelInternalFormat.R32f, size.X, size.Y, size.Z, 0, PixelFormat.Red, PixelType.Float, rotated);
