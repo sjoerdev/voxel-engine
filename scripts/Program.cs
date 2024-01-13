@@ -34,6 +34,7 @@ class Window : GameWindow
     bool canvasAABBcheck = true;
     bool visualizeNormals = false;
     bool visualizeSteps = false;
+    bool visualizeOcclusion = false;
     int currentBrushType = 0;
     int currentDataSetType = 0;
     int brushSize = 24;
@@ -44,6 +45,7 @@ class Window : GameWindow
     bool fullscreen;
     float shadowBias = 2;
     bool shadows = true;
+    bool vvao = true;
     float renderScale = 0.5f;
 
     static NativeWindowSettings windowSettings = new NativeWindowSettings()
@@ -70,6 +72,10 @@ class Window : GameWindow
 
         // setup imgui
         imguiHelper = new ImGuiHelper(Size.X, Size.Y);
+
+        // calculate initial ao
+        Ambient.CalcValues(voxels);
+        Ambient.GenTexture(voxels);
     }
 
     protected override void OnUnload()
@@ -176,9 +182,11 @@ class Window : GameWindow
         ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref voxelTraceSteps, 10, 1000);
         ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("shadow bias", ref shadowBias, 0.1f, 4);
         ImGui.Checkbox("shadows", ref shadows);
+        ImGui.Checkbox("vvao", ref vvao);
         ImGui.Checkbox("canvas aabb check", ref canvasAABBcheck);
         ImGui.Checkbox("visualize normals", ref visualizeNormals);
         ImGui.Checkbox("visualize steps", ref visualizeSteps);
+        ImGui.Checkbox("visualize occlusion", ref visualizeOcclusion);
 
         // imgui serialization
         for (int i = 0; i < 2; i++) ImGui.Spacing();
@@ -189,13 +197,14 @@ class Window : GameWindow
         // imgui dataset generation
         for (int i = 0; i < 2; i++) ImGui.Spacing();
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "dataset generation:");
-        string[] dataSetType = new string[3]{"sphere", "simplex noise", "jawbreaker"};
+        string[] dataSetType = new string[4]{"sphere", "simplex noise", "jawbreaker", "occlusion test"};
         ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("dataset type", ref currentDataSetType, dataSetType, dataSetType.Length);
         if (ImGui.Button("generate", new System.Numerics.Vector2(itemsWidth, 0)))
         {
             if (currentDataSetType == 0) voxels.LoadSphere();
             if (currentDataSetType == 1) voxels.LoadNoise();
             if (currentDataSetType == 2) voxels.LoadJawBreaker();
+            if (currentDataSetType == 3) voxels.LoadOcclusionTest();
         }
 
         // imgui end
@@ -205,16 +214,19 @@ class Window : GameWindow
         shader.UseMainProgram();
         shader.SetVector2("resolution", ((Vector2)Size));
         shader.SetFloat("iTime", timePassed);
+        shader.SetBool("visualizeOcclusion", visualizeOcclusion);
         shader.SetBool("visualizeNormals", visualizeNormals);
         shader.SetBool("visualizeSteps", visualizeSteps);
         shader.SetBool("canvasAABBcheck", canvasAABBcheck);
         shader.SetBool("shadows", shadows);
+        shader.SetBool("vvao", vvao);
         shader.SetFloat("shadowBias", shadowBias);
         shader.SetInt("voxelTraceSteps", voxelTraceSteps);
-        shader.SetVector3("dataSize", ((Vector3)voxels.size));
+        shader.SetVector3("dataSize", (Vector3)voxels.size);
         shader.SetCamera(camera, "view", "camPos");
         shader.SetVoxelData(voxels, "data");
-
+        shader.SetAmbientOcclusion(Ambient.texture, "ambientOcclusionData");
+        
         // render
         shader.RenderMain((int)(Size.X * renderScale), (int)(Size.Y * renderScale));
         shader.RenderPost(Size.X, Size.Y);

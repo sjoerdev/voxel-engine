@@ -11,8 +11,10 @@ uniform float iTime;
 uniform bool canvasAABBcheck;
 uniform bool visualizeNormals;
 uniform bool visualizeSteps;
+uniform bool visualizeOcclusion;
 uniform bool shadows;
 uniform float shadowBias;
+uniform bool vvao;
 uniform int voxelTraceSteps;
 
 uniform vec3 camPos;
@@ -21,10 +23,19 @@ uniform mat4 view;
 uniform sampler3D data;
 uniform vec3 dataSize;
 
+uniform sampler3D ambientOcclusionData;
+
 float Sample(vec3 pos)
 {
     float value = texture(data, pos / dataSize).r;
     return value;
+}
+
+float SampleAO(vec3 pos)
+{
+    float texValue = texture(ambientOcclusionData, pos / dataSize).r;
+    float cutoff = 0.4;
+    return min(1 - texValue, cutoff) / cutoff;
 }
 
 vec3 intersectAABB(vec3 eye, vec3 dir, vec3 pos, vec3 size)
@@ -245,6 +256,10 @@ void main()
     // calc diffuse
     float diffuse = max(0.0, lit * dot(lightpos, normal));
 
+    // calc ao
+    float ao = 1;
+    if (vvao) ao = SampleAO(VoxelCoord);
+
     // calc specular
     vec3 specularcolor = vec3(0.3, 0.3, 0.3);
     vec3 specular = pow(clamp(dot(lightpos, normal), 0.0, 1.0), 64.0) * specularcolor * lit;
@@ -258,5 +273,6 @@ void main()
     
     // return result
     if (visualizeNormals) fragColor = vec4(normal * 0.5 + 0.5, 1.0);
-    else fragColor = vec4(albedo * (diffuse + 0.2) + specular, 1.0);
+    else if (visualizeOcclusion) fragColor = vec4(1) * ao;
+    else fragColor = vec4(albedo * (diffuse * ao + 0.2) + specular, 1.0);
 }

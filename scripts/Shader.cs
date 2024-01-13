@@ -142,6 +142,13 @@ public class Shader
         GL.BindTexture(TextureTarget.Texture3D, data.texture);
     }
 
+    public void SetAmbientOcclusion(int tex, string name)
+    {
+        GL.Uniform1(GL.GetUniformLocation(mainProgramHandle, name), 1);
+        GL.ActiveTexture(TextureUnit.Texture1);
+        GL.BindTexture(TextureTarget.Texture3D, tex);
+    }
+
     public void SetCamera(Camera camera, string viewMatrixName, string cameraPositionName)
     {
         var viewMatrix = camera.GetViewMatrix();

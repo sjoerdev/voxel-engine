@@ -12,7 +12,7 @@ public class Voxels
     public Voxels(Vector3i size)
     {
         this.size = size;
-        LoadNoise();
+        LoadOcclusionTest();
     }
 
     public void Save()
@@ -43,6 +43,32 @@ public class Voxels
         });
 
         array = sphere;
+        GenTexture();
+    }
+
+    public void LoadOcclusionTest()
+    {
+        float[,,] debug = new float[size.X, size.Y, size.Z];
+
+        Parallel.For(0, size.X, x =>
+        {
+            for (int y = 0; y < size.Y; y++)
+            {
+                for (int z = 0; z < size.Z; z++)
+                {
+                    int sphereSize = 100;
+                    int floorHeight = size.Y / 2 - 40;
+
+                    bool inSphere = Vector3.Distance(new Vector3(x, y, z), new Vector3(size.X, size.Y, size.Z) / 2) < sphereSize / 2;
+                    bool inFloor = y < floorHeight;
+
+                    if (inSphere || inFloor) debug[x, y, z] = 0.6f;
+                    else debug[x, y, z] = 0;
+                }
+            }
+        });
+
+        array = debug;
         GenTexture();
     }
 
@@ -106,6 +132,7 @@ public class Voxels
 
         GL.DeleteTexture(texture);
         texture = GL.GenTexture();
+        GL.ActiveTexture(TextureUnit.Texture0);
         GL.BindTexture(TextureTarget.Texture3D, texture);
         GL.TexImage3D(TextureTarget.Texture3D, 0, PixelInternalFormat.R32f, size.X, size.Y, size.Z, 0, PixelFormat.Red, PixelType.Float, rotated);
         GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
@@ -165,6 +192,7 @@ public class Voxels
         }
 
         // update texture
+        GL.ActiveTexture(TextureUnit.Texture0);
         GL.BindTexture(TextureTarget.Texture3D, texture);
         GL.TexSubImage3D(TextureTarget.Texture3D, 0, corner.X, corner.Y, corner.Z, radius, radius, radius, PixelFormat.Red, PixelType.Float, newSubData);
     }
