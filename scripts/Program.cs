@@ -8,7 +8,7 @@ namespace Project;
 
 class Program
 {
-    static void Main(string[] args)
+    static void Main()
     {
         Window window = new Window();
         window.Run();
@@ -51,8 +51,8 @@ class Window : GameWindow
     static NativeWindowSettings windowSettings = new NativeWindowSettings()
     {
         Title = "Sjoerd's Voxel Engine",
-        APIVersion = new System.Version(3, 3),
-        Size = new OpenTK.Mathematics.Vector2i(1280, 720)
+        APIVersion = new Version(3, 3),
+        Size = new Vector2i(1280, 720)
     };
 
     public Window() : base(GameWindowSettings.Default, windowSettings) { }
@@ -91,7 +91,7 @@ class Window : GameWindow
         // update vars
         VSync = vsync ? VSyncMode.On : VSyncMode.Off;
         timePassed += (float)args.Time;
-        frametimes.Add(((float)args.Time));
+        frametimes.Add((float)args.Time);
         imguiHelper.Update(this, (float)args.Time);
 
         // start input
@@ -109,7 +109,7 @@ class Window : GameWindow
             var position = voxels.VoxelTrace(camera.position, dir, 10000);
             if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxels.SculptVoxelData(position, brushSize, hue);
             if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxels.SculptVoxelData(position, brushSize, 0);
-            sculptTick += (1 / brushSpeed);
+            sculptTick += 1 / brushSpeed;
         }
 
         // camera orbit movement
@@ -132,7 +132,6 @@ class Window : GameWindow
 
         // imgui start
         ImGui.Begin("settings");
-        ImGui.GetStyle().FrameRounding = 2;
         int itemsWidth = 180;
 
         // imgui metrics
@@ -234,21 +233,7 @@ class Window : GameWindow
         Context.SwapBuffers();
     }
 
-    protected override void OnResize(ResizeEventArgs args)
-    {
-        base.OnResize(args);
-        imguiHelper.WindowResized(Size.X, Size.Y);
-    }
-
-    protected override void OnTextInput(TextInputEventArgs eventArgs)
-    {
-        base.OnTextInput(eventArgs);
-        imguiHelper.PressChar((char)eventArgs.Unicode);
-    }
-
-    protected override void OnMouseWheel(MouseWheelEventArgs eventArgs)
-    {
-        base.OnMouseWheel(eventArgs);
-        imguiHelper.MouseScroll(eventArgs.Offset);
-    }
+    protected override void OnResize(ResizeEventArgs arg) { base.OnResize(arg); imguiHelper.WindowResized(Size.X, Size.Y); }
+    protected override void OnTextInput(TextInputEventArgs arg) { base.OnTextInput(arg); imguiHelper.PressChar((char)arg.Unicode); }
+    protected override void OnMouseWheel(MouseWheelEventArgs arg) { base.OnMouseWheel(arg); imguiHelper.MouseScroll(arg.Offset); }
 }
