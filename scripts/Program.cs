@@ -73,9 +73,8 @@ class Window : GameWindow
         // setup imgui
         imguiHelper = new ImGuiHelper(Size.X, Size.Y);
 
-        // calculate initial ao
-        Ambient.CalcValues(voxels);
-        Ambient.GenTexture(voxels);
+        // initialize vvao
+        Ambient.Init(voxels);
     }
 
     protected override void OnUnload()
@@ -200,10 +199,14 @@ class Window : GameWindow
         ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("dataset type", ref currentDataSetType, dataSetType, dataSetType.Length);
         if (ImGui.Button("generate", new System.Numerics.Vector2(itemsWidth, 0)))
         {
+            // generate voxeldata
             if (currentDataSetType == 0) voxels.LoadSphere();
             if (currentDataSetType == 1) voxels.LoadNoise();
             if (currentDataSetType == 2) voxels.LoadJawBreaker();
             if (currentDataSetType == 3) voxels.LoadOcclusionTest();
+
+            // reset vvao
+            Ambient.Init(voxels);
         }
 
         // imgui end

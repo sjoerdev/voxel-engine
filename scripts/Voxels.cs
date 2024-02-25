@@ -195,6 +195,9 @@ public class Voxels
         GL.ActiveTexture(TextureUnit.Texture0);
         GL.BindTexture(TextureTarget.Texture3D, texture);
         GL.TexSubImage3D(TextureTarget.Texture3D, 0, corner.X, corner.Y, corner.Z, radius, radius, radius, PixelFormat.Red, PixelType.Float, newSubData);
+
+        // update vvao
+        Ambient.CalcChanged(this, voxelsToChange, corner);
     }
 
     public Vector3i VoxelTrace(Vector3 pos, Vector3 dir, int maxSteps)
