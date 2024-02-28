@@ -9,9 +9,10 @@ uniform vec2 resolution;
 uniform float iTime;
 
 uniform bool canvasAABBcheck;
-uniform bool visualizeNormals;
-uniform bool visualizeSteps;
-uniform bool visualizeOcclusion;
+
+uniform bool showDebugView;
+uniform int debugView;
+
 uniform bool shadows;
 uniform float shadowBias;
 uniform bool vvao;
@@ -227,13 +228,6 @@ void main()
     float top = voxelTraceSteps;
     float stepvisual = steps / top;
 
-    // step visualization for debugging
-    if (visualizeSteps)
-    {
-        fragColor = vec4(bgc.x + stepvisual, bgc.y, bgc.z, 1);
-        return;
-    }
-
     // sample hue
     vec3 albedo = hsv2rgb(vec3(Sample(VoxelCoord), 1, 1));
 
@@ -263,16 +257,26 @@ void main()
     // calc specular
     vec3 specularcolor = vec3(0.3, 0.3, 0.3);
     vec3 specular = pow(clamp(dot(lightpos, normal), 0.0, 1.0), 64.0) * specularcolor * lit;
-    
-    // if nothing was hit
+
+    // calc shaded
+    vec3 shaded = albedo * (diffuse * ao + 0.2) + specular;
+
+    // background color
     if (VoxelCoord == vec3(0))
     {
         fragColor = bgc;
 		return;
     }
     
+    // debug views
+    if (showDebugView)
+    {
+        if (debugView == 0) fragColor = vec4(normal * 0.5 + 0.5, 1.0);
+        if (debugView == 1) fragColor = vec4(bgc.x + stepvisual, bgc.y, bgc.z, 1);
+        if (debugView == 2) fragColor = vec4(1) * ao;
+        return;
+    }
+
     // return result
-    if (visualizeNormals) fragColor = vec4(normal * 0.5 + 0.5, 1.0);
-    else if (visualizeOcclusion) fragColor = vec4(1) * ao;
-    else fragColor = vec4(albedo * (diffuse * ao + 0.2) + specular, 1.0);
+    fragColor = vec4(shaded, 1.0);
 }

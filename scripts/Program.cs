@@ -32,9 +32,10 @@ class Window : GameWindow
 
     int voxelTraceSteps = 600;
     bool canvasAABBcheck = true;
-    bool visualizeNormals = false;
-    bool visualizeSteps = false;
-    bool visualizeOcclusion = false;
+
+    bool showDebugView = false;
+    int debugView = 0;
+
     int currentBrushType = 0;
     int currentDataSetType = 0;
     int brushSize = 24;
@@ -182,9 +183,13 @@ class Window : GameWindow
         ImGui.Checkbox("shadows", ref shadows);
         ImGui.Checkbox("vvao", ref vvao);
         ImGui.Checkbox("canvas aabb check", ref canvasAABBcheck);
-        ImGui.Checkbox("visualize normals", ref visualizeNormals);
-        ImGui.Checkbox("visualize steps", ref visualizeSteps);
-        ImGui.Checkbox("visualize occlusion", ref visualizeOcclusion);
+
+        // imgui debugging
+        for (int i = 0; i < 2; i++) ImGui.Spacing();
+        ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "debugging:");
+        string[] view = new string[3]{"normals", "steps", "vvao"};
+        ImGui.Checkbox("debug view", ref showDebugView);
+        ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("view", ref debugView, view, view.Length);
 
         // imgui serialization
         for (int i = 0; i < 2; i++) ImGui.Spacing();
@@ -216,9 +221,10 @@ class Window : GameWindow
         shader.UseMainProgram();
         shader.SetVector2("resolution", ((Vector2)Size));
         shader.SetFloat("iTime", timePassed);
-        shader.SetBool("visualizeOcclusion", visualizeOcclusion);
-        shader.SetBool("visualizeNormals", visualizeNormals);
-        shader.SetBool("visualizeSteps", visualizeSteps);
+
+        shader.SetBool("showDebugView", showDebugView);
+        shader.SetInt("debugView", debugView);
+
         shader.SetBool("canvasAABBcheck", canvasAABBcheck);
         shader.SetBool("shadows", shadows);
         shader.SetBool("vvao", vvao);
