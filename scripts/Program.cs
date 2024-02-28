@@ -131,7 +131,8 @@ class Window : GameWindow
         base.OnRenderFrame(args);
 
         // imgui start
-        ImGui.Begin("settings");
+        ImGui.SetNextWindowPos(new System.Numerics.Vector2(8, 8), ImGuiCond.Once);
+        ImGui.Begin("settings", ImGuiWindowFlags.NoResize);
         int itemsWidth = 180;
 
         // imgui metrics
