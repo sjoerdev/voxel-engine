@@ -12,7 +12,7 @@ public class Voxels
     public Voxels(Vector3i size)
     {
         this.size = size;
-        LoadOcclusionTest();
+        LoadSphere();
     }
 
     public void Save()
