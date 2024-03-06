@@ -7,6 +7,7 @@
 - Voxel data serialization
 - Support for a wide range of gpu's
 - 3D simplex noise data generation
+- Volumetric ambient occlusion (vvao)
 
 ## System Requirements:
 - Windows with .NET 7 runtime
