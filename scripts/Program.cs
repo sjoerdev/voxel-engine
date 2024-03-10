@@ -30,7 +30,7 @@ class Window : GameWindow
     Vector2 camOrbitRotation;
     float cameraDistance = 600;
 
-    int voxelTraceSteps = 600;
+    int voxelTraceSteps = 1000;
     bool canvasAABBcheck = true;
 
     bool showDebugView = false;
@@ -39,7 +39,7 @@ class Window : GameWindow
     int currentBrushType = 0;
     int currentDataSetType = 0;
     int brushSize = 24;
-    float hue = 0.25f;
+    float hue = 0.72f;
     float sculptTick = 0;
     float brushSpeed = 30;
     bool vsync = true;
@@ -88,7 +88,7 @@ class Window : GameWindow
     {
         base.OnUpdateFrame(args);
 
-        // update vars
+        // general stuff
         VSync = vsync ? VSyncMode.On : VSyncMode.Off;
         timePassed += (float)args.Time;
         frametimes.Add((float)args.Time);
@@ -133,7 +133,7 @@ class Window : GameWindow
         // imgui start
         ImGui.SetNextWindowPos(new System.Numerics.Vector2(8, 8), ImGuiCond.Once);
         ImGui.Begin("settings", ImGuiWindowFlags.NoResize);
-        int itemsWidth = 180;
+        int itemsWidth = 160;
 
         // imgui metrics
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "metrics:");
@@ -179,7 +179,7 @@ class Window : GameWindow
         // imgui rendering settings
         for (int i = 0; i < 2; i++) ImGui.Spacing();
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "rendering settings:");
-        ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref voxelTraceSteps, 10, 1000);
+        ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref voxelTraceSteps, 10, 2000);
         ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("shadow bias", ref shadowBias, 0.1f, 4);
         ImGui.Checkbox("shadows", ref shadows);
         ImGui.Checkbox("vvao", ref vvao);
@@ -201,15 +201,15 @@ class Window : GameWindow
         // imgui dataset generation
         for (int i = 0; i < 2; i++) ImGui.Spacing();
         ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "dataset generation:");
-        string[] dataSetType = new string[4]{"sphere", "simplex noise", "jawbreaker", "occlusion test"};
+        string[] dataSetType = new string[5]{"sphere", "simplex noise", "occlusion test", "dragon", "nymphe"};
         ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("dataset type", ref currentDataSetType, dataSetType, dataSetType.Length);
         if (ImGui.Button("generate", new System.Numerics.Vector2(itemsWidth, 0)))
         {
-            // generate voxeldata
-            if (currentDataSetType == 0) voxels.LoadSphere();
-            if (currentDataSetType == 1) voxels.LoadNoise();
-            if (currentDataSetType == 2) voxels.LoadJawBreaker();
-            if (currentDataSetType == 3) voxels.LoadOcclusionTest();
+            if (currentDataSetType == 0) voxels.LoadSphere(256);
+            if (currentDataSetType == 1) voxels.LoadNoise(256);
+            if (currentDataSetType == 2) voxels.LoadOcclusionTest(256);
+            if (currentDataSetType == 3) voxels.LoadVox("vox/dragon.vox");
+            if (currentDataSetType == 4) voxels.LoadVox("vox/nymphe.vox");
         }
 
         // imgui end
@@ -219,10 +219,8 @@ class Window : GameWindow
         shader.UseMainProgram();
         shader.SetVector2("resolution", ((Vector2)Size));
         shader.SetFloat("iTime", timePassed);
-
         shader.SetBool("showDebugView", showDebugView);
         shader.SetInt("debugView", debugView);
-
         shader.SetBool("canvasAABBcheck", canvasAABBcheck);
         shader.SetBool("shadows", shadows);
         shader.SetBool("vvao", vvao);

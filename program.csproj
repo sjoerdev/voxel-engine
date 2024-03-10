@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Content Include="shaders\**" CopyToPublishDirectory="PreserveNewest"/>
+    <Content Include="vox\**" CopyToPublishDirectory="PreserveNewest"/>
   </ItemGroup>
 
 </Project>

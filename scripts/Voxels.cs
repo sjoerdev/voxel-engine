@@ -34,19 +34,19 @@ public class Voxels
         Ambient.Init(this);
     }
 
-    public void LoadSphere()
+    public void LoadSphere(int size)
     {
-        size = new Vector3i(256, 256, 256);
-        float[,,] sphere = new float[size.X, size.Y, size.Z];
+        this.size = Vector3i.One * size;
+        float[,,] sphere = new float[size, size, size];
 
-        Parallel.For(0, size.X, x =>
+        Parallel.For(0, size, x =>
         {
-            for (int y = 0; y < size.Y; y++)
+            for (int y = 0; y < size; y++)
             {
-                for (int z = 0; z < size.Z; z++)
+                for (int z = 0; z < size; z++)
                 {
-                    if (Vector3.Distance(new Vector3(x, y, z), (new Vector3(size.X, size.Y, size.Z) / 2)) < 100) sphere[x, y, z] = 0.6f;
-                    else sphere[x, y, z] = 0;
+                    var filled = Vector3.Distance(new Vector3(x, y, z), Vector3.One * size / 2) < 100;
+                    if (filled) sphere[x, y, z] = 0.6f;
                 }
             }
         });
@@ -56,71 +56,46 @@ public class Voxels
         Ambient.Init(this);
     }
 
-    public void LoadOcclusionTest()
+    public void LoadOcclusionTest(int size)
     {
-        size = new Vector3i(256, 256, 256);
-        float[,,] debug = new float[size.X, size.Y, size.Z];
+        this.size = Vector3i.One * size;
+        float[,,] voxels = new float[size, size, size];
 
-        Parallel.For(0, size.X, x =>
+        Parallel.For(0, size, x =>
         {
-            for (int y = 0; y < size.Y; y++)
+            for (int y = 0; y < size; y++)
             {
-                for (int z = 0; z < size.Z; z++)
+                for (int z = 0; z < size; z++)
                 {
                     int sphereSize = 100;
-                    int floorHeight = size.Y / 2 - 40;
-
-                    bool inSphere = Vector3.Distance(new Vector3(x, y, z), new Vector3(size.X, size.Y, size.Z) / 2) < sphereSize / 2;
+                    int floorHeight = size / 2 - 40;
+                    bool inSphere = Vector3.Distance(new Vector3(x, y, z), Vector3.One * size / 2) < sphereSize / 2;
                     bool inFloor = y < floorHeight;
-
-                    if (inSphere || inFloor) debug[x, y, z] = 0.6f;
-                    else debug[x, y, z] = 0;
+                    if (inSphere || inFloor) voxels[x, y, z] = 0.6f;
+                    else voxels[x, y, z] = 0;
                 }
             }
         });
 
-        array = debug;
+        array = voxels;
         GenTexture();
         Ambient.Init(this);
     }
 
-    public void LoadNoise()
+    public void LoadNoise(int size)
     {
-        size = new Vector3i(256, 256, 256);
+        this.size = Vector3i.One * size;
+        float[,,] noise = new float[size, size, size];
         Random random = new Random();
         Noise.Seed = random.Next(100, 10000);
-        float[,,] noise = new float[size.X, size.Y, size.Z];
-
-        Parallel.For(0, size.X, x =>
+        Parallel.For(0, size, x =>
         {
-            for (int y = 0; y < size.Y; y++)
+            for (int y = 0; y < size; y++)
             {
-                for (int z = 0; z < size.Z; z++)
+                for (int z = 0; z < size; z++)
                 {
-                    if (Noise.CalcPixel3D(x, y, z, 0.0075f) / 255 > 0.5f) noise[x, y, z] = 0.6f;
-                }
-            }
-        });
-
-        array = noise;
-        GenTexture();
-        Ambient.Init(this);
-    }
-
-    public void LoadJawBreaker()
-    {
-        size = new Vector3i(256, 256, 256);
-        Random random = new Random();
-        Noise.Seed = random.Next(100, 10000);
-        float[,,] noise = new float[size.X, size.Y, size.Z];
-
-        Parallel.For(0, size.X, x =>
-        {
-            for (int y = 0; y < size.Y; y++)
-            {
-                for (int z = 0; z < size.Z; z++)
-                {
-                    noise[x, y, z] = (Noise.CalcPixel3D(x, y, z, 0.0075f) / 255 - 0.5f) * 8;
+                    var filled = Noise.CalcPixel3D(x, y, z, 0.0075f) / 255 > 0.5f;
+                    if (filled) noise[x, y, z] = 0.6f;
                 }
             }
         });
