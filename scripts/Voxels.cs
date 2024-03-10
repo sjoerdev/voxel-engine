@@ -12,7 +12,7 @@ public class Voxels
     public Voxels(Vector3i size)
     {
         this.size = size;
-        LoadSphere();
+        LoadVox("vox/dragon.vox");
     }
 
     public void Save()
@@ -23,6 +23,13 @@ public class Voxels
     public void Load()
     {
         array = Serialization.DeserializeVoxels("voxeldata", size);
+        GenTexture();
+    }
+
+    public void LoadVox(string path)
+    {
+        array = Vox.ReadVox(path);
+        size = GetSize(array);
         GenTexture();
     }
 
@@ -330,5 +337,15 @@ public class Voxels
     {
         if (!IsInBounds(pos, array)) return 0;
         else return array[pos.X, pos.Y, pos.Z];
+    }
+
+    private static Vector3i GetSize(float[,,] array)
+    {
+        return new Vector3i
+        (
+            array.GetUpperBound(0) + 1,
+            array.GetUpperBound(1) + 1,
+            array.GetUpperBound(2) + 1
+        );
     }
 }
