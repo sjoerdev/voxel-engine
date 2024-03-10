@@ -8,13 +8,19 @@ public static class Ambient
     public static float[,,] array;
     public static int texture;
     public static int distance = 32;
+    public static Vector3i size;
+
+    public static void Scale(Voxels voxels)
+    {
+        size = voxels.size / distance;
+        array = new float[size.X, size.Y, size.Z];
+    }
 
     public static void Init(Voxels voxels)
     {
-        var size = voxels.size / distance;
-        array = new float[size.X, size.Y, size.Z];
+        Scale(voxels);
         CalcAll(voxels);
-        GenTexture(voxels);
+        GenTexture();
     }
 
     public static void CalcChanged(Voxels voxels, List<Vector3i> changedVoxels, Vector3i corner)
@@ -37,21 +43,17 @@ public static class Ambient
                 for (int vz = 0; vz < distance; vz++)
                 {
                     var coord = new Vector3i(box.X * distance + vx, box.Y * distance + vy, box.Z * distance + vz);
-                    float value = voxels.array[coord.X, coord.Y, coord.Z];
-                    if (value != 0) filled++;
+                    if (IsInBounds(coord, voxels.array) && voxels.array[coord.X, coord.Y, coord.Z] != 0) filled++;
                 }
             }
         }
 
         float ao = filled / total;
-        array[box.X, box.Y, box.Z] = ao;
+        if (IsInBounds(box, array)) array[box.X, box.Y, box.Z] = ao;
     }
 
     public static void CalcAll(Voxels voxels)
     {
-        var size = voxels.size / distance;
-        array = new float[size.X, size.Y, size.Z];
-        
         Parallel.For(0, size.X, x =>
         {
             for (int y = 0; y < size.Y; y++)
@@ -64,10 +66,8 @@ public static class Ambient
         });
     }
 
-    public static void GenTexture(Voxels voxels)
+    public static void GenTexture()
     {
-        var size = voxels.size / distance;
-
         // rotate data (dont know why this is needed, but whatever, it works)
         float[,,] rotated = new float[size.Z, size.Y, size.X];
         Parallel.For(0, size.X, x =>
@@ -95,8 +95,6 @@ public static class Ambient
 
     public static void UpdateTexture(Voxels voxels)
     {
-        var size = voxels.size / distance;
-
         // rotate data (dont know why this is needed, but whatever, it works)
         float[,,] rotated = new float[size.Z, size.Y, size.X];
         Parallel.For(0, size.X, x =>
@@ -113,5 +111,13 @@ public static class Ambient
         GL.ActiveTexture(TextureUnit.Texture1);
         GL.BindTexture(TextureTarget.Texture3D, texture);
         GL.TexImage3D(TextureTarget.Texture3D, 0, PixelInternalFormat.R32f, size.X, size.Y, size.Z, 0, PixelFormat.Red, PixelType.Float, rotated);
+    }
+
+    public static bool IsInBounds(Vector3 coord, float[,,] data)
+    {
+        bool xIs = coord.X >= 0 && coord.X <= data.GetUpperBound(0);
+        bool yIs = coord.Y >= 0 && coord.Y <= data.GetUpperBound(1);
+        bool zIs = coord.Z >= 0 && coord.Z <= data.GetUpperBound(2);
+        return xIs && yIs && zIs;
     }
 }

@@ -9,9 +9,8 @@ public class Voxels
     public int texture;
     public Vector3i size;
 
-    public Voxels(Vector3i size)
+    public Voxels()
     {
-        this.size = size;
         LoadVox("vox/dragon.vox");
     }
 
@@ -24,6 +23,7 @@ public class Voxels
     {
         array = Serialization.DeserializeVoxels("voxeldata", size);
         GenTexture();
+        Ambient.Init(this);
     }
 
     public void LoadVox(string path)
@@ -31,10 +31,12 @@ public class Voxels
         array = Vox.ReadVox(path);
         size = GetSize(array);
         GenTexture();
+        Ambient.Init(this);
     }
 
     public void LoadSphere()
     {
+        size = new Vector3i(256, 256, 256);
         float[,,] sphere = new float[size.X, size.Y, size.Z];
 
         Parallel.For(0, size.X, x =>
@@ -51,10 +53,12 @@ public class Voxels
 
         array = sphere;
         GenTexture();
+        Ambient.Init(this);
     }
 
     public void LoadOcclusionTest()
     {
+        size = new Vector3i(256, 256, 256);
         float[,,] debug = new float[size.X, size.Y, size.Z];
 
         Parallel.For(0, size.X, x =>
@@ -77,10 +81,12 @@ public class Voxels
 
         array = debug;
         GenTexture();
+        Ambient.Init(this);
     }
 
     public void LoadNoise()
     {
+        size = new Vector3i(256, 256, 256);
         Random random = new Random();
         Noise.Seed = random.Next(100, 10000);
         float[,,] noise = new float[size.X, size.Y, size.Z];
@@ -98,10 +104,12 @@ public class Voxels
 
         array = noise;
         GenTexture();
+        Ambient.Init(this);
     }
 
     public void LoadJawBreaker()
     {
+        size = new Vector3i(256, 256, 256);
         Random random = new Random();
         Noise.Seed = random.Next(100, 10000);
         float[,,] noise = new float[size.X, size.Y, size.Z];
@@ -119,6 +127,7 @@ public class Voxels
 
         array = noise;
         GenTexture();
+        Ambient.Init(this);
     }
 
     public void GenTexture()

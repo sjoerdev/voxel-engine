@@ -25,6 +25,8 @@ uniform sampler3D data;
 uniform vec3 dataSize;
 
 uniform sampler3D ambientOcclusionData;
+uniform vec3 ambientOcclusionDataSize;
+uniform int aoDis;
 
 float Sample(vec3 pos)
 {
@@ -34,7 +36,7 @@ float Sample(vec3 pos)
 
 float SampleAO(vec3 pos)
 {
-    float texValue = texture(ambientOcclusionData, pos / dataSize).r;
+    float texValue = texture(ambientOcclusionData, pos / aoDis / ambientOcclusionDataSize).r;
     float cutoff = 0.4;
     return min(1 - texValue, cutoff) / cutoff;
 }

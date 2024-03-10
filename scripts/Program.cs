@@ -66,7 +66,7 @@ class Window : GameWindow
         shader = new Shader("shaders/vert.glsl", "shaders/frag.glsl", "shaders/post.glsl");
 
         // create voxel data
-        voxels = new Voxels(new Vector3i(256, 256, 256));
+        voxels = new Voxels();
 
         // setup camera
         camera = new Camera();
@@ -210,9 +210,6 @@ class Window : GameWindow
             if (currentDataSetType == 1) voxels.LoadNoise();
             if (currentDataSetType == 2) voxels.LoadJawBreaker();
             if (currentDataSetType == 3) voxels.LoadOcclusionTest();
-
-            // reset vvao
-            Ambient.Init(voxels);
         }
 
         // imgui end
@@ -235,6 +232,8 @@ class Window : GameWindow
         shader.SetCamera(camera, "view", "camPos");
         shader.SetVoxelData(voxels, "data");
         shader.SetAmbientOcclusion(Ambient.texture, "ambientOcclusionData");
+        shader.SetVector3("ambientOcclusionDataSize", (Vector3)Ambient.size);
+        shader.SetInt("aoDis", Ambient.distance);
         
         // render
         shader.RenderMain((int)(Size.X * renderScale), (int)(Size.Y * renderScale));
