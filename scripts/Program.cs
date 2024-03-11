@@ -48,6 +48,7 @@ class Window : GameWindow
     bool shadows = true;
     bool vvao = true;
     float renderScale = 0.5f;
+    bool showSettings = true;
 
     static NativeWindowSettings windowSettings = new NativeWindowSettings()
     {
@@ -99,6 +100,9 @@ class Window : GameWindow
         var input = KeyboardState;
         if (!IsFocused) return;
 
+        // toggle settings
+        if (input.IsKeyPressed(Keys.F1)) showSettings = !showSettings;
+
         // voxel sculpting
         if (timePassed > sculptTick)
         {
@@ -130,11 +134,40 @@ class Window : GameWindow
     {
         base.OnRenderFrame(args);
 
+        // imgui window
+        if (showSettings) SettingsWindow();
+        
+        // set shader uniforms
+        shader.UseMainProgram();
+        shader.SetVector2("resolution", (Vector2)Size);
+        shader.SetFloat("iTime", timePassed);
+        shader.SetBool("showDebugView", showDebugView);
+        shader.SetInt("debugView", debugView);
+        shader.SetBool("canvasAABBcheck", canvasAABBcheck);
+        shader.SetBool("shadows", shadows);
+        shader.SetBool("vvao", vvao);
+        shader.SetFloat("shadowBias", shadowBias);
+        shader.SetInt("voxelTraceSteps", voxelTraceSteps);
+        shader.SetVector3("dataSize", (Vector3)voxels.size);
+        shader.SetCamera(camera, "view", "camPos");
+        shader.SetVoxelData(voxels, "data");
+        shader.SetAmbientOcclusion(Ambient.texture, "ambientOcclusionData");
+        shader.SetVector3("ambientOcclusionDataSize", (Vector3)Ambient.size);
+        shader.SetInt("aoDis", Ambient.distance);
+        
+        // render
+        shader.RenderMain((int)(Size.X * renderScale), (int)(Size.Y * renderScale));
+        shader.RenderPost(Size.X, Size.Y);
+        imguiHelper.Render();
+        Context.SwapBuffers();
+    }
+
+    private void SettingsWindow()
+    {
         // imgui start
         ImGui.SetNextWindowPos(new System.Numerics.Vector2(8, 8), ImGuiCond.Once);
         ImGui.SetNextWindowSizeConstraints(new System.Numerics.Vector2(256, 32), new System.Numerics.Vector2(720, 720));
         ImGui.Begin("settings", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.AlwaysAutoResize);
-
         int itemsWidth = 140;
 
         // imgui metrics
@@ -227,30 +260,6 @@ class Window : GameWindow
 
         // imgui end
         ImGui.End();
-
-        // set shader uniforms
-        shader.UseMainProgram();
-        shader.SetVector2("resolution", ((Vector2)Size));
-        shader.SetFloat("iTime", timePassed);
-        shader.SetBool("showDebugView", showDebugView);
-        shader.SetInt("debugView", debugView);
-        shader.SetBool("canvasAABBcheck", canvasAABBcheck);
-        shader.SetBool("shadows", shadows);
-        shader.SetBool("vvao", vvao);
-        shader.SetFloat("shadowBias", shadowBias);
-        shader.SetInt("voxelTraceSteps", voxelTraceSteps);
-        shader.SetVector3("dataSize", (Vector3)voxels.size);
-        shader.SetCamera(camera, "view", "camPos");
-        shader.SetVoxelData(voxels, "data");
-        shader.SetAmbientOcclusion(Ambient.texture, "ambientOcclusionData");
-        shader.SetVector3("ambientOcclusionDataSize", (Vector3)Ambient.size);
-        shader.SetInt("aoDis", Ambient.distance);
-        
-        // render
-        shader.RenderMain((int)(Size.X * renderScale), (int)(Size.Y * renderScale));
-        shader.RenderPost(Size.X, Size.Y);
-        imguiHelper.Render();
-        Context.SwapBuffers();
     }
 
     protected override void OnResize(ResizeEventArgs arg) { base.OnResize(arg); imguiHelper.WindowResized(Size.X, Size.Y); }
