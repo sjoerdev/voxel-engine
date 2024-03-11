@@ -132,84 +132,97 @@ class Window : GameWindow
 
         // imgui start
         ImGui.SetNextWindowPos(new System.Numerics.Vector2(8, 8), ImGuiCond.Once);
-        ImGui.Begin("settings", ImGuiWindowFlags.NoResize);
-        int itemsWidth = 160;
+        ImGui.SetNextWindowSizeConstraints(new System.Numerics.Vector2(256, 32), new System.Numerics.Vector2(720, 720));
+        ImGui.Begin("settings", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.AlwaysAutoResize);
+
+        int itemsWidth = 140;
 
         // imgui metrics
-        ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "metrics:");
-        int amount = 256;
-        float maxFramerate = 165;
-        float minFramerate = 20;
-        int start = frametimes.Count < amount ? 0 : frametimes.Count - amount;
-        int length = frametimes.Count < amount ? frametimes.Count : amount;
-        ImGui.PlotLines("", ref frametimes.ToArray()[start], length, 0, "fps: " + ImGui.GetIO().Framerate.ToString("#"), 1f / maxFramerate, 1f / minFramerate, new System.Numerics.Vector2(0, 40));
-
-        // imgui brush
-        for (int i = 0; i < 2; i++) ImGui.Spacing();
-        ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "brush settings:");
-        string[] items = new string[2]{"sculpt add", "sculpt remove"};
-        ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("brush type", ref currentBrushType, items, items.Length);
-        ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("brush size", ref brushSize, 8, 32);
-        ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("brush speed", ref brushSpeed, 10, 30);
-        System.Numerics.Vector4 hueSliderColor = new System.Numerics.Vector4();
-        ImGui.ColorConvertHSVtoRGB(hue, 1, 0.5f, out hueSliderColor.X, out hueSliderColor.Y, out hueSliderColor.Z);
-        hueSliderColor.W = 1;
-        ImGui.PushStyleColor(ImGuiCol.FrameBg, hueSliderColor);
-        ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, hueSliderColor);
-        ImGui.PushStyleColor(ImGuiCol.FrameBgActive, hueSliderColor);
-        ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("brush hue", ref hue, 0.001f, 1);
-        ImGui.StyleColorsDark();
-
-        // imgui display settings
-        for (int i = 0; i < 2; i++) ImGui.Spacing();
-        ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "display settings:");
-        ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("resolution scale", ref renderScale, 0.1f, 1);
-        ImGui.Checkbox("vsync", ref vsync);
-        if (ImGui.Checkbox("fullscreen", ref fullscreen))
+        if (ImGui.CollapsingHeader("metrics"))
         {
-            if (fullscreen) WindowState = WindowState.Fullscreen;
-            else
+            int amount = 512;
+            if (frametimes.Count > amount)
             {
-                WindowState = WindowState.Normal;
-                Size = new Vector2i(1280, 720);
-                CenterWindow();
+                int start = frametimes.Count - amount;
+                var overlay = "fps: " + ImGui.GetIO().Framerate.ToString("#");
+                var size = new System.Numerics.Vector2(ImGui.GetContentRegionAvail().X, 64);
+                ImGui.PlotLines("", ref frametimes.ToArray()[start], amount, 0, overlay, 1f / 165, 1f / 20, size);
+            }
+            else ImGui.Text("loading...");
+        }
+        
+        // imgui brush
+        if (ImGui.CollapsingHeader("brush"))
+        {
+            string[] items = new string[2]{"sculpt add", "sculpt remove"};
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("type", ref currentBrushType, items, items.Length);
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("size", ref brushSize, 8, 32);
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("speed", ref brushSpeed, 10, 30);
+            System.Numerics.Vector4 hueSliderColor = new System.Numerics.Vector4();
+            ImGui.ColorConvertHSVtoRGB(hue, 1, 0.5f, out hueSliderColor.X, out hueSliderColor.Y, out hueSliderColor.Z);
+            hueSliderColor.W = 1;
+            ImGui.PushStyleColor(ImGuiCol.FrameBg, hueSliderColor);
+            ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, hueSliderColor);
+            ImGui.PushStyleColor(ImGuiCol.FrameBgActive, hueSliderColor);
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("hue", ref hue, 0.001f, 1);
+            ImGui.StyleColorsDark();
+        }
+        
+        // imgui display settings
+        if (ImGui.CollapsingHeader("display"))
+        {
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("render scale", ref renderScale, 0.1f, 1);
+            ImGui.Checkbox("vsync", ref vsync);
+            if (ImGui.Checkbox("fullscreen", ref fullscreen))
+            {
+                if (fullscreen) WindowState = WindowState.Fullscreen;
+                else
+                {
+                    WindowState = WindowState.Normal;
+                    Size = new Vector2i(1280, 720);
+                    CenterWindow();
+                }
             }
         }
 
         // imgui rendering settings
-        for (int i = 0; i < 2; i++) ImGui.Spacing();
-        ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "rendering settings:");
-        ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref voxelTraceSteps, 10, 2000);
-        ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("shadow bias", ref shadowBias, 0.1f, 4);
-        ImGui.Checkbox("shadows", ref shadows);
-        ImGui.Checkbox("vvao", ref vvao);
-        ImGui.Checkbox("canvas aabb check", ref canvasAABBcheck);
+        if (ImGui.CollapsingHeader("rendering"))
+        {
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref voxelTraceSteps, 10, 2000);
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("shadow bias", ref shadowBias, 0.1f, 4);
+            ImGui.Checkbox("shadows", ref shadows);
+            ImGui.Checkbox("vvao", ref vvao);
+            ImGui.Checkbox("canvas aabb", ref canvasAABBcheck);
+        }
 
         // imgui debugging
-        for (int i = 0; i < 2; i++) ImGui.Spacing();
-        ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "debugging:");
-        string[] view = new string[3]{"normals", "steps", "vvao"};
-        ImGui.Checkbox("debug view", ref showDebugView);
-        ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("view", ref debugView, view, view.Length);
+        if (ImGui.CollapsingHeader("debug"))
+        {
+            string[] view = new string[3]{"normals", "steps", "vvao"};
+            ImGui.Checkbox("debug view", ref showDebugView);
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("view", ref debugView, view, view.Length);
+        }
 
         // imgui serialization
-        for (int i = 0; i < 2; i++) ImGui.Spacing();
-        ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "serialization:");
-        if (ImGui.Button("save", new System.Numerics.Vector2(itemsWidth, 0))) voxels.Save();
-        if (ImGui.Button("load", new System.Numerics.Vector2(itemsWidth, 0))) voxels.Load();
-
-        // imgui dataset generation
-        for (int i = 0; i < 2; i++) ImGui.Spacing();
-        ImGui.TextColored(new System.Numerics.Vector4(0, 1, 0.8f, 1), "dataset generation:");
-        string[] dataSetType = new string[5]{"sphere", "simplex noise", "occlusion test", "dragon", "nymphe"};
-        ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("dataset type", ref currentDataSetType, dataSetType, dataSetType.Length);
-        if (ImGui.Button("generate", new System.Numerics.Vector2(itemsWidth, 0)))
+        if (ImGui.CollapsingHeader("serialize"))
         {
-            if (currentDataSetType == 0) voxels.LoadSphere(256);
-            if (currentDataSetType == 1) voxels.LoadNoise(256);
-            if (currentDataSetType == 2) voxels.LoadOcclusionTest(256);
-            if (currentDataSetType == 3) voxels.LoadVox("vox/dragon.vox");
-            if (currentDataSetType == 4) voxels.LoadVox("vox/nymphe.vox");
+            if (ImGui.Button("save", new System.Numerics.Vector2(itemsWidth, 0))) voxels.Save();
+            if (ImGui.Button("load", new System.Numerics.Vector2(itemsWidth, 0))) voxels.Load();
+        }
+
+        // imgui voxeldata
+        if (ImGui.CollapsingHeader("voxeldata"))
+        {
+            string[] dataSetType = new string[5]{"sphere", "simplex noise", "occlusion test", "dragon", "nymphe"};
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("dataset", ref currentDataSetType, dataSetType, dataSetType.Length);
+            if (ImGui.Button("generate", new System.Numerics.Vector2(itemsWidth, 0)))
+            {
+                if (currentDataSetType == 0) voxels.LoadSphere(256);
+                if (currentDataSetType == 1) voxels.LoadNoise(256);
+                if (currentDataSetType == 2) voxels.LoadOcclusionTest(256);
+                if (currentDataSetType == 3) voxels.LoadVox("vox/dragon.vox");
+                if (currentDataSetType == 4) voxels.LoadVox("vox/nymphe.vox");
+            }
         }
 
         // imgui end
