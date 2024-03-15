@@ -28,7 +28,7 @@ public class Vox
         foreach (var model in models) foreach (var voxel in model.voxels)
         {
             Vector3i worldPos = offset + model.position + voxel - Vector3i.One * 3;
-            if (Inside(worldPos, totalSize)) fullArray[worldPos.X, worldPos.Z, worldPos.Y] = 0.4f;
+            if (Inside(worldPos, totalSize)) fullArray[worldPos.X, worldPos.Z, worldPos.Y] = 0.6f;
         }
 
         return fullArray;

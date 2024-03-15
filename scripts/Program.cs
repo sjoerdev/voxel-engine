@@ -38,7 +38,7 @@ class Window : GameWindow
     int currentBrushType = 0;
     int currentDataSetType = 0;
     int brushSize = 24;
-    float hue = 0.72f;
+    float hue = 0.3f;
     float brushSpeed = 30;
     bool vsync = true;
     bool fullscreen;
