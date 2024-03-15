@@ -22,25 +22,23 @@ class Window : GameWindow
     Shader shader;
     Voxels voxels;
 
-    float timePassed;
-    List<float> frametimes = new List<float>();
-
     bool firstMouseMovement = true;
     Vector2 lastMousePos;
     Vector2 camOrbitRotation;
     float cameraDistance = 600;
+    float timePassed;
+    float sculptTick = 0;
+    bool showSettings = true;
 
+    List<float> frametimes = new List<float>();
     int voxelTraceSteps = 1000;
     bool canvasAABBcheck = true;
-
     bool showDebugView = false;
     int debugView = 0;
-
     int currentBrushType = 0;
     int currentDataSetType = 0;
     int brushSize = 24;
     float hue = 0.72f;
-    float sculptTick = 0;
     float brushSpeed = 30;
     bool vsync = true;
     bool fullscreen;
@@ -48,47 +46,47 @@ class Window : GameWindow
     bool shadows = true;
     bool vvao = true;
     float renderScale = 0.5f;
-    bool showSettings = true;
 
-    static NativeWindowSettings windowSettings = new NativeWindowSettings()
+    static NativeWindowSettings nativeSettings = new NativeWindowSettings()
     {
         Title = "Sjoerd's Voxel Engine",
         APIVersion = new Version(3, 3),
         Size = new Vector2i(1280, 720)
     };
 
-    public Window() : base(GameWindowSettings.Default, windowSettings) { }
+    public Window() : base(GameWindowSettings.Default, nativeSettings){}
 
     protected override void OnLoad()
     {
         base.OnLoad();
-
-        // setup shader
         shader = new Shader("shaders/vert.glsl", "shaders/frag.glsl", "shaders/post.glsl");
-
-        // create voxel data
         voxels = new Voxels();
-
-        // setup camera
         camera = new Camera();
-
-        // setup imgui
         imguiHelper = new ImGuiHelper(Size.X, Size.Y);
-
-        // initialize vvao
         Ambient.Init(voxels);
     }
 
-    protected override void OnUpdateFrame(FrameEventArgs args)
+    protected override void OnRenderFrame(FrameEventArgs args)
     {
-        base.OnUpdateFrame(args);
-
-        // general stuff
+        base.OnRenderFrame(args);
+        float delta = (float)args.Time;
         VSync = vsync ? VSyncMode.On : VSyncMode.Off;
-        timePassed += (float)args.Time;
-        frametimes.Add((float)args.Time);
-        imguiHelper.Update(this, (float)args.Time);
+        imguiHelper.Update(this, delta);
+        timePassed += delta;
+        frametimes.Add(delta);
 
+        ApplyInput();
+        if (showSettings) SettingsWindow();
+        SetShaderUniforms();
+        
+        shader.RenderMain((int)(Size.X * renderScale), (int)(Size.Y * renderScale));
+        shader.RenderPost(Size.X, Size.Y);
+        imguiHelper.Render();
+        Context.SwapBuffers();
+    }
+
+    private void ApplyInput()
+    {
         // start input
         var mouse = MouseState;
         var input = KeyboardState;
@@ -124,14 +122,8 @@ class Window : GameWindow
         camera.RotateAround(voxels.size / 2, camOrbitRotation, cameraDistance);
     }
 
-    protected override void OnRenderFrame(FrameEventArgs args)
+    private void SetShaderUniforms()
     {
-        base.OnRenderFrame(args);
-
-        // imgui window
-        if (showSettings) SettingsWindow();
-        
-        // set shader uniforms
         shader.UseMainProgram();
         shader.SetVector2("resolution", (Vector2)Size);
         shader.SetFloat("iTime", timePassed);
@@ -148,12 +140,6 @@ class Window : GameWindow
         shader.SetAmbientOcclusion(Ambient.texture, "ambientOcclusionData");
         shader.SetVector3("ambientOcclusionDataSize", (Vector3)Ambient.size);
         shader.SetInt("aoDis", Ambient.distance);
-        
-        // render
-        shader.RenderMain((int)(Size.X * renderScale), (int)(Size.Y * renderScale));
-        shader.RenderPost(Size.X, Size.Y);
-        imguiHelper.Render();
-        Context.SwapBuffers();
     }
 
     private void SettingsWindow()
