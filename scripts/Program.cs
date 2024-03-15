@@ -79,12 +79,6 @@ class Window : GameWindow
         Ambient.Init(voxels);
     }
 
-    protected override void OnUnload()
-    {
-        base.OnUnload();
-        File.Delete("imgui.ini");
-    }
-
     protected override void OnUpdateFrame(FrameEventArgs args)
     {
         base.OnUpdateFrame(args);

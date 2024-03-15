@@ -29,7 +29,7 @@ public class ImGuiHelper : IDisposable
     /// <summary>
     /// Constructs a new ImGuiController.
     /// </summary>
-    public ImGuiHelper(int width, int height)
+    public unsafe ImGuiHelper(int width, int height)
     {
         _windowWidth = width;
         _windowHeight = height;
@@ -53,6 +53,8 @@ public class ImGuiHelper : IDisposable
 
         ImGui.NewFrame();
         _frameBegun = true;
+
+        ImGui.GetIO().NativePtr->IniFilename = null;
     }
 
     public void WindowResized(int width, int height)
