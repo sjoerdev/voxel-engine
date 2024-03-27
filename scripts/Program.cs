@@ -153,15 +153,19 @@ class Window : GameWindow
         // imgui metrics
         if (ImGui.CollapsingHeader("metrics"))
         {
-            int amount = 512;
+            int amount = 128;
             if (frametimes.Count > amount)
             {
                 int start = frametimes.Count - amount;
                 var overlay = "fps: " + ImGui.GetIO().Framerate.ToString("#");
                 var size = new System.Numerics.Vector2(ImGui.GetContentRegionAvail().X, 64);
-                ImGui.PlotLines("", ref frametimes.ToArray()[start], amount, 0, overlay, 1f / 165, 1f / 20, size);
+                ImGui.PlotLines("", ref frametimes.ToArray()[start], amount, 0, overlay, 0, 1 / 10f, size);
             }
-            else ImGui.Text("loading...");
+            else
+            {
+                int percentage = (int)(frametimes.Count / (float)amount * 100);
+                ImGui.Text("loading: " + percentage + "%%");
+            }
         }
         
         // imgui brush
