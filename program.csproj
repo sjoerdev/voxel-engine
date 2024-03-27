@@ -14,10 +14,5 @@
     <PackageReference Include="ImGui.NET" Version="1.89.5" />
     <PackageReference Include="OpenTK" Version="4.7.7" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="shaders\**" CopyToPublishDirectory="PreserveNewest"/>
-    <Content Include="vox\**" CopyToPublishDirectory="PreserveNewest"/>
-  </ItemGroup>
-
+  
 </Project>
