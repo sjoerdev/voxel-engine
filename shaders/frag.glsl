@@ -240,25 +240,28 @@ void main()
     vec3 lightdir = vec3(1, 0.6, 1);
     vec3 lightpos = normalize(lightdir * 10000);
 
+    // calc diffuse
+    float diffuse = max(0.0, dot(lightpos, normal));
+
+    // calc specular
+    float exponent = 64;
+    float intensity = 0.3;
+    float specular = pow(max(dot(normal, normalize(lightdir + dir)), 0.0), exponent) * intensity;
+
     // calc shadow
-    float lit = 1;
+    float shadow = 1;
     if (shadows)
     {
         vec3 startPos = VoxelCoord + lightdir + (normal * shadowBias);
         vec3 shadowVoxel = VoxelTrace(startPos, lightdir, steps);
-        if (shadowVoxel != vec3(0)) lit = 0;
+        if (shadowVoxel != vec3(0)) shadow = 0;
     }
-
-    // calc diffuse
-    float diffuse = max(0.0, lit * dot(lightpos, normal));
-
+    diffuse *= shadow;
+    specular *= shadow;
+    
     // calc ao
     float ao = 1;
     if (vvao) ao = SampleAO(VoxelCoord);
-
-    // calc specular
-    vec3 specularcolor = vec3(0.3, 0.3, 0.3);
-    vec3 specular = pow(clamp(dot(lightpos, normal), 0.0, 1.0), 64.0) * specularcolor * lit;
 
     // calc shaded
     vec3 shaded = albedo * (diffuse * ao + 0.2) + specular;
