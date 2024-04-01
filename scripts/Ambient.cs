@@ -43,7 +43,7 @@ public static class Ambient
                 for (int vz = 0; vz < distance; vz++)
                 {
                     var coord = new Vector3i(box.X * distance + vx, box.Y * distance + vy, box.Z * distance + vz);
-                    if (IsInBounds(coord, voxels.array) && voxels.array[coord.X, coord.Y, coord.Z] != 0) filled++;
+                    if (IsInBounds(coord, voxels.array) && voxels.array[coord.X, coord.Y, coord.Z] != Vector3.Zero) filled++;
                 }
             }
         }
@@ -114,6 +114,14 @@ public static class Ambient
     }
 
     public static bool IsInBounds(Vector3 coord, float[,,] data)
+    {
+        bool xIs = coord.X >= 0 && coord.X <= data.GetUpperBound(0);
+        bool yIs = coord.Y >= 0 && coord.Y <= data.GetUpperBound(1);
+        bool zIs = coord.Z >= 0 && coord.Z <= data.GetUpperBound(2);
+        return xIs && yIs && zIs;
+    }
+
+    public static bool IsInBounds(Vector3 coord, Vector3[,,] data)
     {
         bool xIs = coord.X >= 0 && coord.X <= data.GetUpperBound(0);
         bool yIs = coord.Y >= 0 && coord.Y <= data.GetUpperBound(1);

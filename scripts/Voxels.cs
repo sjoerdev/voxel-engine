@@ -5,7 +5,7 @@ namespace Project;
 
 public class Voxels
 {
-    public float[,,] array;
+    public Vector3[,,] array;
     public int texture;
     public Vector3i size;
 
@@ -16,12 +16,12 @@ public class Voxels
 
     public void Save()
     {
-        Serialization.SerializeVoxels("voxeldata", array, size);
+        Serialization.SerializeVoxelsBinary("voxeldata", array, size);
     }
 
     public void Load()
     {
-        array = Serialization.DeserializeVoxels("voxeldata", size);
+        array = Serialization.DeserializeVoxelsBinary("voxeldata", size);
         GenTexture();
         Ambient.Init(this);
     }
@@ -37,7 +37,7 @@ public class Voxels
     public void LoadSphere(int size)
     {
         this.size = Vector3i.One * size;
-        float[,,] sphere = new float[size, size, size];
+        Vector3[,,] sphere = new Vector3[size, size, size];
 
         Parallel.For(0, size, x =>
         {
@@ -46,7 +46,7 @@ public class Voxels
                 for (int z = 0; z < size; z++)
                 {
                     var filled = Vector3.Distance(new Vector3(x, y, z), Vector3.One * size / 2) < 100;
-                    if (filled) sphere[x, y, z] = 0.6f;
+                    if (filled) sphere[x, y, z] = new Vector3(0.4f, 0.4f, 0.8f);
                 }
             }
         });
@@ -59,7 +59,7 @@ public class Voxels
     public void LoadOcclusionTest(int size)
     {
         this.size = Vector3i.One * size;
-        float[,,] voxels = new float[size, size, size];
+        Vector3[,,] voxels = new Vector3[size, size, size];
 
         Parallel.For(0, size, x =>
         {
@@ -71,8 +71,7 @@ public class Voxels
                     int floorHeight = size / 2 - 40;
                     bool inSphere = Vector3.Distance(new Vector3(x, y, z), Vector3.One * size / 2) < sphereSize / 2;
                     bool inFloor = y < floorHeight;
-                    if (inSphere || inFloor) voxels[x, y, z] = 0.6f;
-                    else voxels[x, y, z] = 0;
+                    if (inSphere || inFloor) voxels[x, y, z] = new Vector3(0.4f, 0.4f, 0.8f);
                 }
             }
         });
@@ -85,7 +84,7 @@ public class Voxels
     public void LoadNoise(int size)
     {
         this.size = Vector3i.One * size;
-        float[,,] noise = new float[size, size, size];
+        Vector3[,,] noise = new Vector3[size, size, size];
         Random random = new Random();
         Noise.Seed = random.Next(100, 10000);
         Parallel.For(0, size, x =>
@@ -95,7 +94,7 @@ public class Voxels
                 for (int z = 0; z < size; z++)
                 {
                     var filled = Noise.CalcPixel3D(x, y, z, 0.0075f) / 255 > 0.5f;
-                    if (filled) noise[x, y, z] = 0.6f;
+                    if (filled) noise[x, y, z] = new Vector3(0.4f, 0.4f, 0.8f);
                 }
             }
         });
@@ -108,7 +107,7 @@ public class Voxels
     public void GenTexture()
     {
         // rotate data (dont know why this is needed, but whatever, it works)
-        float[,,] rotated = new float[size.Z, size.Y, size.X];
+        Vector3[,,] rotated = new Vector3[size.Z, size.Y, size.X];
 
         Parallel.For(0, size.X, x =>
         {
@@ -125,7 +124,7 @@ public class Voxels
         texture = GL.GenTexture();
         GL.ActiveTexture(TextureUnit.Texture0);
         GL.BindTexture(TextureTarget.Texture3D, texture);
-        GL.TexImage3D(TextureTarget.Texture3D, 0, PixelInternalFormat.R32f, size.X, size.Y, size.Z, 0, PixelFormat.Red, PixelType.Float, rotated);
+        GL.TexImage3D(TextureTarget.Texture3D, 0, PixelInternalFormat.Rgb, size.X, size.Y, size.Z, 0, PixelFormat.Rgb, PixelType.Float, rotated);
         GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureMagFilter, (int)TextureMinFilter.Nearest);
         GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
         GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToBorder);
@@ -134,10 +133,10 @@ public class Voxels
     }
 
     // voxel sculpting, if value <= 0, instead of adding voxels you will remove them
-    public void SculptVoxelData(Vector3i position, int radius, float value)
+    public void SculptVoxelData(Vector3i position, int radius, Vector3 value)
     {
         Vector3i corner = position - Vector3i.One * radius / 2;
-        float[,,] newSubData = new float[radius, radius, radius];
+        Vector3[,,] newSubData = new Vector3[radius, radius, radius];
 
         // clamp subdata corner inside voxel data
         Vector3i delta = new Vector3i();
@@ -161,13 +160,13 @@ public class Voxels
                     Vector3i worldCoord = corner + localCoord;
 
                     // set subdata voxel to current voxel before changing it to anything else
-                    float currentWorldSpaceValue = array[worldCoord.X, worldCoord.Y, worldCoord.Z];
+                    Vector3 currentWorldSpaceValue = array[worldCoord.X, worldCoord.Y, worldCoord.Z];
                     newSubData[localCoord.Z, localCoord.Y, localCoord.X] = currentWorldSpaceValue;
 
                     // flag surface voxels for change depending on if we are removing or adding voxels
                     bool isInRadius = Vector3.Distance(localCoord - delta, new Vector3(radius, radius , radius) / 2) < radius / 2;
-                    bool shouldAdd = value > 0 && currentWorldSpaceValue <= 0 && isInRadius && IsVoxelOnSurface(worldCoord);
-                    bool shouldRemove = value <= 0 && currentWorldSpaceValue > 0 && isInRadius && IsVoxelSurface(worldCoord);
+                    bool shouldAdd = value != Vector3.Zero && currentWorldSpaceValue == Vector3.Zero && isInRadius && IsVoxelOnSurface(worldCoord);
+                    bool shouldRemove = value == Vector3.Zero && currentWorldSpaceValue != Vector3.Zero && isInRadius && IsVoxelSurface(worldCoord);
                     if (shouldAdd || shouldRemove) voxelsToChange.Add(localCoord);
                 }
             }
@@ -185,7 +184,7 @@ public class Voxels
         // update texture
         GL.ActiveTexture(TextureUnit.Texture0);
         GL.BindTexture(TextureTarget.Texture3D, texture);
-        GL.TexSubImage3D(TextureTarget.Texture3D, 0, corner.X, corner.Y, corner.Z, radius, radius, radius, PixelFormat.Red, PixelType.Float, newSubData);
+        GL.TexSubImage3D(TextureTarget.Texture3D, 0, corner.X, corner.Y, corner.Z, radius, radius, radius, PixelFormat.Rgb, PixelType.Float, newSubData);
 
         // update vvao
         Ambient.CalcChanged(this, voxelsToChange, corner);
@@ -235,7 +234,7 @@ public class Voxels
         while (true)
         {
             // voxel is hit
-            if (IsInBounds(coord, array) && array[coord.X, coord.Y, coord.Z] > 0)
+            if (IsInBounds(coord, array) && array[coord.X, coord.Y, coord.Z] != Vector3.Zero)
             {
                 result = coord;
                 break;
@@ -285,7 +284,7 @@ public class Voxels
         return result;
     }
 
-    public bool IsInBounds(Vector3 coord, float[,,] data)
+    public bool IsInBounds(Vector3 coord, Vector3[,,] data)
     {
         bool xIs = coord.X >= data.GetLowerBound(0) && coord.X <= data.GetUpperBound(0);
         bool yIs = coord.Y >= data.GetLowerBound(1) && coord.Y <= data.GetUpperBound(1);
@@ -296,34 +295,34 @@ public class Voxels
     public bool IsVoxelOnSurface(Vector3i pos)
     {
         bool isOnSurface = 
-        TryGetVoxelValue(new Vector3i(pos.X + 1, pos.Y, pos.Z)) > 0 ||
-        TryGetVoxelValue(new Vector3i(pos.X - 1, pos.Y, pos.Z)) > 0 ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y + 1, pos.Z)) > 0 ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y - 1, pos.Z)) > 0 ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z + 1)) > 0 ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z - 1)) > 0;
+        TryGetVoxelValue(new Vector3i(pos.X + 1, pos.Y, pos.Z)) != Vector3.Zero ||
+        TryGetVoxelValue(new Vector3i(pos.X - 1, pos.Y, pos.Z)) != Vector3.Zero ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y + 1, pos.Z)) != Vector3.Zero ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y - 1, pos.Z)) != Vector3.Zero ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z + 1)) != Vector3.Zero ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z - 1)) != Vector3.Zero;
         return isOnSurface;
     }
 
     public bool IsVoxelSurface(Vector3i pos)
     {
         bool isSurface = 
-        TryGetVoxelValue(new Vector3i(pos.X + 1, pos.Y, pos.Z)) <= 0 || 
-        TryGetVoxelValue(new Vector3i(pos.X - 1, pos.Y, pos.Z)) <= 0 ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y + 1, pos.Z)) <= 0 ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y - 1, pos.Z)) <= 0 ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z + 1)) <= 0 ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z - 1)) <= 0;
+        TryGetVoxelValue(new Vector3i(pos.X + 1, pos.Y, pos.Z)) == Vector3.Zero || 
+        TryGetVoxelValue(new Vector3i(pos.X - 1, pos.Y, pos.Z)) == Vector3.Zero ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y + 1, pos.Z)) == Vector3.Zero ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y - 1, pos.Z)) == Vector3.Zero ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z + 1)) == Vector3.Zero ||
+        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z - 1)) == Vector3.Zero;
         return isSurface;
     }
 
-    public float TryGetVoxelValue(Vector3i pos)
+    public Vector3 TryGetVoxelValue(Vector3i pos)
     {
-        if (!IsInBounds(pos, array)) return 0;
+        if (!IsInBounds(pos, array)) return Vector3.Zero;
         else return array[pos.X, pos.Y, pos.Z];
     }
 
-    private static Vector3i GetSize(float[,,] array)
+    private static Vector3i GetSize(Vector3[,,] array)
     {
         return new Vector3i
         (

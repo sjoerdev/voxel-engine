@@ -28,9 +28,9 @@ uniform sampler3D ambientOcclusionData;
 uniform vec3 ambientOcclusionDataSize;
 uniform int aoDis;
 
-float Sample(vec3 pos)
+vec3 Sample(vec3 pos)
 {
-    float value = texture(data, pos / dataSize).r;
+    vec3 value = texture(data, pos / dataSize).rgb;
     return value;
 }
 
@@ -108,7 +108,7 @@ vec3 VoxelTrace(vec3 eye, vec3 marchingDirection, out int stepsTraced)
     while (true)
     {
         // if voxel is found
-        if (Sample(coord) > 0)
+        if (Sample(coord) != vec3(0))
         {
             result = coord;
             stepsTraced = steps;
@@ -180,7 +180,7 @@ vec3 VoxelNormal(vec3 coord)
                 float a = x - t;
                 float b = y - t;
                 float c = z - t;
-                if (Sample(vec3(coord.x + a, coord.y + b, coord.z + c)) > 0) 
+                if (Sample(vec3(coord.x + a, coord.y + b, coord.z + c)) != vec3(0))
                 {
                     normal += vec3(a, b, c);
                 }
@@ -231,7 +231,7 @@ void main()
     float stepvisual = steps / top;
 
     // sample hue
-    vec3 albedo = hsv2rgb(vec3(Sample(VoxelCoord), 1, 1));
+    vec3 albedo = Sample(VoxelCoord);
 
     // calc normals
     normal = VoxelNormal(VoxelCoord);

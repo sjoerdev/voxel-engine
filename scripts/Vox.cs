@@ -4,7 +4,7 @@ namespace Project;
 
 public class Vox
 {
-    public static float[,,] ReadVox(string path)
+    public static Vector3[,,] ReadVox(string path)
     {
         var models = ExtractModels(path);
 
@@ -24,11 +24,11 @@ public class Vox
         Vector3i totalSize = aMax - aMin;
         Vector3i offset = -aMin;
 
-        float[,,] fullArray = new float[totalSize.X, totalSize.Z, totalSize.Y];
+        Vector3[,,] fullArray = new Vector3[totalSize.X, totalSize.Z, totalSize.Y];
         foreach (var model in models) foreach (var voxel in model.voxels)
         {
             Vector3i worldPos = offset + model.position + voxel - Vector3i.One * 3;
-            if (Inside(worldPos, totalSize)) fullArray[worldPos.X, worldPos.Z, worldPos.Y] = 0.6f;
+            if (Inside(worldPos, totalSize)) fullArray[worldPos.X, worldPos.Z, worldPos.Y] = new Vector3(0.4f, 0.4f, 0.8f);
         }
 
         return fullArray;

@@ -38,7 +38,6 @@ class Window : GameWindow
     int currentBrushType = 0;
     int currentDataSetType = 0;
     int brushSize = 24;
-    float hue = 0.3f;
     float brushSpeed = 30;
     bool vsync = true;
     bool fullscreen;
@@ -46,7 +45,8 @@ class Window : GameWindow
     bool shadows = true;
     bool vvao = true;
     float renderScale = 0.5f;
-
+    Vector3 color = new Vector3(1, 0.4f, 0);
+    
     static NativeWindowSettings nativeSettings = new NativeWindowSettings()
     {
         Title = "Sjoerd's Voxel Engine",
@@ -103,8 +103,8 @@ class Window : GameWindow
             var uv = ndc * new Vector2(aspect, 1);
             Vector3 dir = (camera.GetViewMatrix() * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
             var position = voxels.VoxelTrace(camera.position, dir, 10000);
-            if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxels.SculptVoxelData(position, brushSize, hue);
-            if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxels.SculptVoxelData(position, brushSize, 0);
+            if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxels.SculptVoxelData(position, brushSize, color);
+            if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxels.SculptVoxelData(position, brushSize, Vector3.Zero);
             sculptTick += 1 / brushSpeed;
         }
 
@@ -167,22 +167,19 @@ class Window : GameWindow
                 ImGui.Text("loading: " + percentage + "%%");
             }
         }
-        
+
         // imgui brush
         if (ImGui.CollapsingHeader("brush"))
         {
-            string[] items = new string[2]{"sculpt add", "sculpt remove"};
+            string[] items = {"sculpt add", "sculpt remove"};
             ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("type", ref currentBrushType, items, items.Length);
             ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("size", ref brushSize, 8, 32);
             ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("speed", ref brushSpeed, 10, 30);
-            System.Numerics.Vector4 hueSliderColor = new System.Numerics.Vector4();
-            ImGui.ColorConvertHSVtoRGB(hue, 1, 0.5f, out hueSliderColor.X, out hueSliderColor.Y, out hueSliderColor.Z);
-            hueSliderColor.W = 1;
-            ImGui.PushStyleColor(ImGuiCol.FrameBg, hueSliderColor);
-            ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, hueSliderColor);
-            ImGui.PushStyleColor(ImGuiCol.FrameBgActive, hueSliderColor);
-            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("hue", ref hue, 0.001f, 1);
-            ImGui.StyleColorsDark();
+            
+            ImGui.SetNextItemWidth(itemsWidth);
+            var colorvec = new System.Numerics.Vector3(color.X, color.Y, color.Z);
+            ImGui.ColorPicker3("color", ref colorvec, ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoSidePreview);
+            color = new Vector3(colorvec.X, colorvec.Y, colorvec.Z);
         }
         
         // imgui display settings
