@@ -41,7 +41,7 @@ class Window : GameWindow
     float brushSpeed = 30;
     bool vsync = false;
     bool fullscreen;
-    float shadowBias = 2;
+    float shadowBias = 2.8f;
     bool shadows = true;
     bool vvao = true;
     float renderScale = 0.5f;
