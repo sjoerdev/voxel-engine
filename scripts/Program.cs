@@ -39,7 +39,7 @@ class Window : GameWindow
     int currentDataSetType = 0;
     int brushSize = 24;
     float brushSpeed = 30;
-    bool vsync = true;
+    bool vsync = false;
     bool fullscreen;
     float shadowBias = 2;
     bool shadows = true;
