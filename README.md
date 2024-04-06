@@ -1,21 +1,18 @@
 ## Sjoerd's Voxel Engine
-<img width="720" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/4d1f0fa2-76aa-4f44-b7cd-bf535e3cdd4d">
+<img width="720" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/89c333fb-b86f-43df-ad6d-3573df01cd04">
 
 ## Features:
-- Ray Tracing
+- Voxel Ray Tracing
 - Real time voxel editing (sculpting)
-- Voxel data serialization
-- Support for a wide range of gpu's
-- 3D [simplex](https://github.com/WardBenjamin/SimplexNoise/blob/master/SimplexNoise/Noise.cs) noise data generation
+- Support for Magica Voxel ([.vox](https://github.com/ephtracy/voxel-model)) models
 - Volumetric ambient occlusion ([vvao](https://www.youtube.com/watch?v=3WaLMBiezMU))
 - Runs on both Linux and Windows
-- Support for Magica ([.vox](https://github.com/ephtracy/voxel-model)) models
 
 ## System Requirements:
-- The [.NET 8](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) runtime
+- The .NET 8 SDK ([windows](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/sdk-8.0.203-windows-x64-installer)) ([linux](https://learn.microsoft.com/en-us/dotnet/core/install/linux))
 - OpenGL 3.3 capable GPU
 
 ## Gallery:
-<img width="720" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/c85557f6-bf82-4c2a-8b2e-c05d298bc103">
-<img width="720" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/0439b611-fe96-4b93-9f20-4719b3243dc2">
-<img width="720" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/4d1f0fa2-76aa-4f44-b7cd-bf535e3cdd4d">
+<img width="720" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/edc69a08-0866-45f5-90d3-c8090921ba0d">
+<img width="720" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/89c333fb-b86f-43df-ad6d-3573df01cd04">
+<img width="720" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/c5facacd-77df-433c-8ec6-3aefabd4e39e">
