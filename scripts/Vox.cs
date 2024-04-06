@@ -27,8 +27,10 @@ public class Vox
         Vector3[,,] fullArray = new Vector3[totalSize.X, totalSize.Z, totalSize.Y];
         foreach (var model in models) foreach (var voxel in model.voxels)
         {
-            Vector3i worldPos = offset + model.position + voxel - Vector3i.One * 3;
-            if (Inside(worldPos, totalSize)) fullArray[worldPos.X, worldPos.Z, worldPos.Y] = new Vector3(0.4f, 0.4f, 0.8f);
+            byte index = (byte)voxel.W;
+            Vector3 color = model.palette[index - 1];
+            Vector3i worldPos = offset + model.position + voxel.Xyz - Vector3i.One * 3;
+            if (Inside(worldPos, totalSize)) fullArray[worldPos.X, worldPos.Z, worldPos.Y] = color;
         }
 
         return fullArray;
@@ -36,9 +38,10 @@ public class Vox
 
     private static List<Model> ExtractModels(string filePath)
     {
-        var models_v = new List<List<Vector3i>>();
+        var models_v = new List<List<Vector4i>>();
         var models_s = new List<Vector3i>();
         var models_p = new List<Vector3i>();
+        var models_c = new Vector3[256];
 
         FileStream fileStream = new FileStream(filePath, FileMode.Open);
         BinaryReader reader = new BinaryReader(fileStream);
@@ -67,15 +70,15 @@ public class Vox
                     }
                     else if (subChunk == "XYZI") // model voxels
                     {
-                        List<Vector3i> voxels = new List<Vector3i>();
+                        List<Vector4i> voxels = new List<Vector4i>();
                         int numVoxels = reader.ReadInt32();
                         for (int i = 0; i < numVoxels; i++)
                         {
                             byte x = reader.ReadByte();
                             byte y = reader.ReadByte();
                             byte z = reader.ReadByte();
-                            byte color = reader.ReadByte();
-                            voxels.Add(new Vector3i(x, y, z));
+                            byte index = reader.ReadByte();
+                            voxels.Add(new Vector4i(x, y, z, index));
                         }
                         models_v.Add(voxels);
                     }
@@ -115,6 +118,17 @@ public class Vox
                             }
                         }
                     }
+                    else if (subChunk == "RGBA")
+                    {
+                        for (int i = 0; i < 256; i++)
+                        {
+                            byte r = reader.ReadByte();
+                            byte g = reader.ReadByte();
+                            byte b = reader.ReadByte();
+                            byte a = reader.ReadByte();
+                            models_c[i] = new Vector3(r / 255f, g / 255f, b / 255f);
+                        }
+                    }
                     else
                     {
                         reader.ReadBytes(subChunkSize);
@@ -137,7 +151,8 @@ public class Vox
             {
                 size = models_s[i],
                 voxels = models_v[i],
-                position = models_p[i]
+                position = models_p[i],
+                palette = models_c
             };
             models.Add(model);
         }
@@ -176,14 +191,16 @@ public class Vox
     private struct Model
     {
         public Vector3i size;
-        public List<Vector3i> voxels;
+        public List<Vector4i> voxels;
         public Vector3i position;
+        public Vector3[] palette;
 
         public Model()
         {
             size = Vector3i.Zero;
-            voxels = new List<Vector3i>();
+            voxels = new List<Vector4i>();
             position = Vector3i.Zero;
+            palette = new Vector3[256];
         }
     }
 }
