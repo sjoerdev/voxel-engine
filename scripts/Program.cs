@@ -32,7 +32,7 @@ class Window : GameWindow
 
     List<float> frametimes = new List<float>();
     int voxelTraceSteps = 1000;
-    bool canvasAABBcheck = true;
+    bool canvasCheck = true;
     bool showDebugView = false;
     int debugView = 0;
     int currentBrushType = 0;
@@ -101,7 +101,7 @@ class Window : GameWindow
             var ndc = (mouse.Position / Size) - new Vector2(0.5f, 0.5f);
             float aspect = (float)Size.X / (float)Size.Y;
             var uv = ndc * new Vector2(aspect, 1);
-            Vector3 dir = (camera.GetViewMatrix() * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
+            Vector3 dir = (camera.viewMatrix * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
             var position = voxels.VoxelTrace(camera.position, dir, 10000);
             if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxels.SculptVoxelData(position, brushSize, color);
             if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxels.SculptVoxelData(position, brushSize, Vector3.Zero);
@@ -126,10 +126,10 @@ class Window : GameWindow
     {
         shader.UseMainProgram();
         shader.SetVector2("resolution", (Vector2)Size);
-        shader.SetFloat("iTime", timePassed);
+        shader.SetFloat("time", timePassed);
         shader.SetBool("showDebugView", showDebugView);
         shader.SetInt("debugView", debugView);
-        shader.SetBool("canvasAABBcheck", canvasAABBcheck);
+        shader.SetBool("canvasCheck", canvasCheck);
         shader.SetBool("shadows", shadows);
         shader.SetBool("vvao", vvao);
         shader.SetFloat("shadowBias", shadowBias);
@@ -171,7 +171,7 @@ class Window : GameWindow
         // imgui brush
         if (ImGui.CollapsingHeader("brush"))
         {
-            string[] items = {"sculpt add", "sculpt remove"};
+            string[] items = ["sculpt add", "sculpt remove"];
             ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("type", ref currentBrushType, items, items.Length);
             ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("size", ref brushSize, 8, 32);
             ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("speed", ref brushSpeed, 10, 30);
@@ -206,13 +206,13 @@ class Window : GameWindow
             ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("shadow bias", ref shadowBias, 0.1f, 4);
             ImGui.Checkbox("shadows", ref shadows);
             ImGui.Checkbox("vvao", ref vvao);
-            ImGui.Checkbox("canvas aabb", ref canvasAABBcheck);
+            ImGui.Checkbox("canvas check", ref canvasCheck);
         }
 
         // imgui debugging
         if (ImGui.CollapsingHeader("debug"))
         {
-            string[] view = new string[3]{"normals", "steps", "vvao"};
+            string[] view = ["normals", "steps", "vvao"];
             ImGui.Checkbox("debug view", ref showDebugView);
             ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("view", ref debugView, view, view.Length);
         }
@@ -227,7 +227,7 @@ class Window : GameWindow
         // imgui voxeldata
         if (ImGui.CollapsingHeader("voxeldata"))
         {
-            string[] dataSetType = new string[5]{"sphere", "simplex noise", "occlusion test", "dragon", "nymphe"};
+            string[] dataSetType = ["sphere", "simplex noise", "occlusion test", "dragon", "nymphe"];
             ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("dataset", ref currentDataSetType, dataSetType, dataSetType.Length);
             if (ImGui.Button("generate", new System.Numerics.Vector2(itemsWidth, 0)))
             {

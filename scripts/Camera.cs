@@ -5,16 +5,14 @@ namespace Project;
 public class Camera
 {
     public Vector3 position;
-    private Vector3 front;
-    private Vector3 up;
-    private Vector3 right;
-    private float pitch;
-    private float yaw;
+    public Matrix4 viewMatrix; 
 
-    public Matrix4 GetViewMatrix()
-    {
-        return Matrix4.LookAt(position, position + front, up);
-    }
+    float pitch;
+    float yaw;
+
+    Vector3 front;
+    Vector3 up;
+    Vector3 right;
 
     public void RotateAround(Vector3 target, Vector2 rotation, float offset)
     {
@@ -24,5 +22,6 @@ public class Camera
         right = Vector3.Normalize(Vector3.Cross(front, Vector3.UnitY));
         up = Vector3.Normalize(Vector3.Cross(right, front));
         position = target + front * offset;
+        viewMatrix = Matrix4.LookAt(position, position + front, up);
     }
 }

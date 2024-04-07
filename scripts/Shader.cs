@@ -151,8 +151,7 @@ public class Shader
 
     public void SetCamera(Camera camera, string viewMatrixName, string cameraPositionName)
     {
-        var viewMatrix = camera.GetViewMatrix();
-        GL.UniformMatrix4(GL.GetUniformLocation(mainProgramHandle, viewMatrixName), true, ref viewMatrix);
+        GL.UniformMatrix4(GL.GetUniformLocation(mainProgramHandle, viewMatrixName), true, ref camera.viewMatrix);
         GL.Uniform3(GL.GetUniformLocation(mainProgramHandle, cameraPositionName), camera.position.X, camera.position.Y, camera.position.Z);
     }
     
