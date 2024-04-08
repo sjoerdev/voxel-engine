@@ -3,27 +3,20 @@
 in vec2 ndc;
 out vec4 fragColor;
 
-#define PI 3.1415926538;
-
 uniform vec2 resolution;
 uniform float time;
 
 uniform bool canvasCheck;
-
 uniform bool showDebugView;
 uniform int debugView;
-
 uniform bool shadows;
 uniform float shadowBias;
 uniform bool vvao;
-uniform int voxelTraceSteps;
-
+uniform int maxsteps;
 uniform vec3 camPos;
 uniform mat4 view;
-
 uniform sampler3D data;
 uniform vec3 dataSize;
-
 uniform sampler3D ambientOcclusionData;
 uniform vec3 ambientOcclusionDataSize;
 uniform int aoDis;
@@ -41,7 +34,7 @@ float SampleAO(vec3 pos)
     return min(1 - texValue, cutoff) / cutoff;
 }
 
-vec3 intersectAABB(vec3 eye, vec3 dir, vec3 pos, vec3 size)
+vec3 HitBoundingBox(vec3 eye, vec3 dir, vec3 pos, vec3 size)
 {
     vec3 t1 = (pos - eye) / dir;
     vec3 t2 = (pos + size - eye) / dir;
@@ -52,7 +45,6 @@ vec3 intersectAABB(vec3 eye, vec3 dir, vec3 pos, vec3 size)
     else return eye;
 }
 
-// check if a coord is within the voxel data or not
 bool OutsideCanvas(vec3 coord)
 {
     if (coord.x < -1 || coord.x > dataSize.x + 1 || coord.y < -1 || coord.y > dataSize.y + 1 || coord.z < -1 || coord.z > dataSize.z + 1) return true;
@@ -114,7 +106,7 @@ vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps)
         steps++;
 
         bool hit = Sample(coord) != vec3(0);
-        bool toofar = steps > voxelTraceSteps;
+        bool toofar = steps > maxsteps;
         bool outside = canvasCheck && OutsideCanvas(coord);
         bool anything = hit || toofar || outside;
 
@@ -158,31 +150,34 @@ void main()
     vec3 eye = camPos;
     vec3 dir = (view * vec4(uv * 1, 1, 1)).xyz;
 
-    // offset eye to canvas aabb if possible
-    if (canvasCheck) eye = intersectAABB(eye, dir, vec3(0), dataSize);
+    // offset eye to canvas
+    if (canvasCheck) eye = HitBoundingBox(eye, dir, vec3(0), dataSize);
 
-    // if ray never crossed the canvas aabb, return bg color
+    // if ray never enters canvas return background
     if (OutsideCanvas(eye) && canvasCheck)
     {
         fragColor = bgc;
 		return;
     }
-
-    // define variables
-    vec3 VoxelCoord;
-    vec3 normal;
-
+    
     // trace ray
     int steps;
-    VoxelCoord = VoxelTrace(eye, dir, steps);
+    vec3 voxel = VoxelTrace(eye, dir, steps);
+    
+    // background color
+    if (voxel == vec3(0))
+    {
+        fragColor = bgc;
+		return;
+    }
 
-    // sample hue
-    vec3 albedo = Sample(VoxelCoord);
+    // sample color
+    vec3 albedo = Sample(voxel);
 
     // calc normals
-    normal = VoxelNormal(VoxelCoord);
+    vec3 normal = VoxelNormal(voxel);
 
-    // calc light pos
+    // define light
     vec3 lightdir = vec3(1, 0.6, 1);
     vec3 lightpos = normalize(lightdir * 10000);
 
@@ -194,37 +189,31 @@ void main()
     float intensity = 0.3;
     float specular = pow(max(dot(normal, normalize(lightdir + dir)), 0.0), exponent) * intensity;
 
-    // calc shadow
-    float shadow = 1;
+    // calc shadows
     if (shadows)
     {
         int sdwsteps;
-        vec3 startPos = VoxelCoord + lightdir + (normal * shadowBias);
-        vec3 shadowVoxel = VoxelTrace(startPos, lightdir, sdwsteps);
-        if (shadowVoxel != vec3(0)) shadow = 0;
+        vec3 start = voxel + lightdir + (normal * shadowBias);
+        vec3 shadowVoxel = VoxelTrace(start, lightdir, sdwsteps);
+        if (shadowVoxel != vec3(0))
+        {
+            diffuse = 0;
+            specular = 0;
+        }
     }
-    diffuse *= shadow;
-    specular *= shadow;
     
     // calc ao
     float ao = 1;
-    if (vvao) ao = SampleAO(VoxelCoord);
+    if (vvao) ao = SampleAO(voxel);
 
     // calc shaded
     vec3 shaded = albedo * (diffuse * ao + 0.2) + specular;
-
-    // background color
-    if (VoxelCoord == vec3(0))
-    {
-        fragColor = bgc;
-		return;
-    }
     
     // debug views
     if (showDebugView)
     {
         if (debugView == 0) fragColor = vec4(normal * 0.5 + 0.5, 1.0);
-        if (debugView == 1) fragColor = vec4(bgc.x + steps / float(voxelTraceSteps), bgc.y, bgc.z, 1);
+        if (debugView == 1) fragColor = vec4(bgc.x + steps / float(maxsteps), bgc.y, bgc.z, 1);
         if (debugView == 2) fragColor = vec4(1) * ao;
         return;
     }

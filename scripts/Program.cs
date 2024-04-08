@@ -31,7 +31,7 @@ class Window : GameWindow
     bool showSettings = true;
 
     List<float> frametimes = new List<float>();
-    int voxelTraceSteps = 1000;
+    int maxsteps = 1000;
     bool canvasCheck = true;
     bool showDebugView = false;
     int debugView = 0;
@@ -133,7 +133,7 @@ class Window : GameWindow
         shader.SetBool("shadows", shadows);
         shader.SetBool("vvao", vvao);
         shader.SetFloat("shadowBias", shadowBias);
-        shader.SetInt("voxelTraceSteps", voxelTraceSteps);
+        shader.SetInt("maxsteps", maxsteps);
         shader.SetVector3("dataSize", (Vector3)voxels.size);
         shader.SetCamera(camera, "view", "camPos");
         shader.SetVoxelData(voxels, "data");
@@ -202,7 +202,7 @@ class Window : GameWindow
         // imgui rendering settings
         if (ImGui.CollapsingHeader("rendering"))
         {
-            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref voxelTraceSteps, 10, 2000);
+            ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref maxsteps, 10, 2000);
             ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("shadow bias", ref shadowBias, 0.1f, 4);
             ImGui.Checkbox("shadows", ref shadows);
             ImGui.Checkbox("vvao", ref vvao);
