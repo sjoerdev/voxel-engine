@@ -53,39 +53,24 @@ bool OutsideCanvas(vec3 coord)
 
 vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps)
 {
-    vec3 stepsize;
-    vec3 toboundry;
-
-    // init stepsize
-    stepsize = 1 / abs(dir);
-
-    // init toboundry
-    if (dir.x < 0) toboundry.x = (floor(eye.x / 1) - eye.x) / dir.x;
-    else toboundry.x = (floor(eye.x / 1) + 1 - eye.x) / dir.x;
-    if (dir.y < 0) toboundry.y = (floor(eye.y / 1) - eye.y) / dir.y;
-    else toboundry.y = (floor(eye.y / 1) + 1 - eye.y) / dir.y;
-    if (dir.z < 0) toboundry.z = (floor(eye.z / 1) - eye.z) / dir.z;
-    else toboundry.z = (floor(eye.z / 1) + 1 - eye.z) / dir.z;
-    
-    // tracing the grid
     vec3 result;
-    vec3 coord = floor(eye);
+    vec3 stepsize = 1 / abs(dir);
+    vec3 toboundry = (sign(dir) * 0.5 + 0.5 - fract(eye)) / dir;
+    vec3 voxel = floor(eye);
+
     while (true)
     {
-        // increment step
         if (toboundry.x < toboundry.y)
         {
             if (toboundry.x < toboundry.z)
             {
                 toboundry.x += stepsize.x;
-                if (dir.x < 0) coord.x -= 1;
-                else coord.x += 1;
+                voxel.x += dir.x > 0 ? 1 : -1;
             }
             else
             {
                 toboundry.z += stepsize.z;
-                if (dir.z < 0) coord.z -= 1;
-                else coord.z += 1;
+                voxel.z += dir.z > 0 ? 1 : -1;
             }
         }
         else
@@ -93,24 +78,22 @@ vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps)
             if (toboundry.y < toboundry.z)
             {
                 toboundry.y += stepsize.y;
-                if (dir.y < 0) coord.y -= 1;
-                else coord.y += 1;
+                voxel.y += dir.y > 0 ? 1 : -1;
             }
             else
             {
                 toboundry.z += stepsize.z;
-                if (dir.z < 0) coord.z -= 1;
-                else coord.z += 1;
+                voxel.z += dir.z > 0 ? 1 : -1;
             }
         }
         steps++;
 
-        bool hit = Sample(coord) != vec3(0);
+        bool hit = Sample(voxel) != vec3(0);
         bool toofar = steps > maxsteps;
-        bool outside = canvasCheck && OutsideCanvas(coord);
+        bool outside = canvasCheck && OutsideCanvas(voxel);
         bool anything = hit || toofar || outside;
 
-        if (hit) result = coord;
+        if (hit) result = voxel;
         if (toofar || outside) result = vec3(0);
         if (anything) break;
     }
