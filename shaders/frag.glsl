@@ -60,34 +60,11 @@ vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps)
 
     while (true)
     {
-        if (toboundry.x < toboundry.y)
-        {
-            if (toboundry.x < toboundry.z)
-            {
-                toboundry.x += stepsize.x;
-                voxel.x += dir.x > 0 ? 1 : -1;
-            }
-            else
-            {
-                toboundry.z += stepsize.z;
-                voxel.z += dir.z > 0 ? 1 : -1;
-            }
-        }
-        else
-        {
-            if (toboundry.y < toboundry.z)
-            {
-                toboundry.y += stepsize.y;
-                voxel.y += dir.y > 0 ? 1 : -1;
-            }
-            else
-            {
-                toboundry.z += stepsize.z;
-                voxel.z += dir.z > 0 ? 1 : -1;
-            }
-        }
+        bvec3 mask = lessThanEqual(toboundry, min(toboundry.yzx, toboundry.zxy));
+        toboundry += vec3(mask) * stepsize;
+        voxel += ivec3(vec3(mask)) * ivec3(sign(dir));
         steps++;
-
+        
         bool hit = Sample(voxel) != vec3(0);
         bool toofar = steps > maxsteps;
         bool outside = canvasCheck && OutsideCanvas(voxel);
