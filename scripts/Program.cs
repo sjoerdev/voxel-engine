@@ -83,7 +83,7 @@ class Window : GameWindow
         if (showSettings) SettingsWindow();
 
         framebuffer.Clear();
-        SetShaderUniforms();
+        rtshaderUniforms();
         rtshader.RenderToFramebuffer(Size, renderScale, framebuffer);
         framebuffer.Show(Size.X, Size.Y, fbshader);
 
@@ -128,24 +128,33 @@ class Window : GameWindow
         camera.RotateAround(voxels.size / 2, camOrbitRotation, cameraDistance);
     }
 
-    private void SetShaderUniforms()
+    private void rtshaderUniforms()
     {
         rtshader.UseShader();
-        rtshader.SetVector2("resolution", (Vector2)Size);
+        
+        rtshader.SetMatrix4("view", camera.viewMatrix);
+
+        rtshader.SetTexture3("data", voxels.texture, 0);
+        rtshader.SetTexture3("ambientOcclusionData", Ambient.texture, 1);
+        
         rtshader.SetFloat("time", timePassed);
-        rtshader.SetBool("showDebugView", showDebugView);
+        rtshader.SetFloat("shadowBias", shadowBias);
+
         rtshader.SetInt("debugView", debugView);
+        rtshader.SetInt("maxsteps", maxsteps);
+        rtshader.SetInt("aoDis", Ambient.distance);
+        
+        rtshader.SetBool("showDebugView", showDebugView);
         rtshader.SetBool("canvasCheck", canvasCheck);
         rtshader.SetBool("shadows", shadows);
         rtshader.SetBool("vvao", vvao);
-        rtshader.SetFloat("shadowBias", shadowBias);
-        rtshader.SetInt("maxsteps", maxsteps);
+
+        rtshader.SetVector2("resolution", (Vector2)Size);
+
+        rtshader.SetVector3("camPos", camera.position);
         rtshader.SetVector3("dataSize", (Vector3)voxels.size);
-        rtshader.SetCamera(camera, "view", "camPos");
-        rtshader.SetVoxelData(voxels, "data");
-        rtshader.SetAmbientOcclusion(Ambient.texture, "ambientOcclusionData");
         rtshader.SetVector3("ambientOcclusionDataSize", (Vector3)Ambient.size);
-        rtshader.SetInt("aoDis", Ambient.distance);
+        
     }
 
     private void SettingsWindow()

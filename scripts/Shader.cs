@@ -99,24 +99,16 @@ public class Shader
         GL.UseProgram(program);
     }
 
-    public void SetVoxelData(Voxels data, string name)
+    public void SetTexture3(string name, int handle, int unit)
     {
-        GL.Uniform1(GL.GetUniformLocation(program, name), 0);
-        GL.ActiveTexture(TextureUnit.Texture0);
-        GL.BindTexture(TextureTarget.Texture3D, data.texture);
+        GL.Uniform1(GL.GetUniformLocation(program, name), unit);
+        GL.ActiveTexture((TextureUnit)(TextureUnit.Texture0 + unit));
+        GL.BindTexture(TextureTarget.Texture3D, handle);
     }
 
-    public void SetAmbientOcclusion(int tex, string name)
+    public void SetMatrix4(string name, Matrix4 matrix)
     {
-        GL.Uniform1(GL.GetUniformLocation(program, name), 1);
-        GL.ActiveTexture(TextureUnit.Texture1);
-        GL.BindTexture(TextureTarget.Texture3D, tex);
-    }
-
-    public void SetCamera(Camera camera, string viewMatrixName, string cameraPositionName)
-    {
-        GL.UniformMatrix4(GL.GetUniformLocation(program, viewMatrixName), true, ref camera.viewMatrix);
-        GL.Uniform3(GL.GetUniformLocation(program, cameraPositionName), camera.position.X, camera.position.Y, camera.position.Z);
+        GL.UniformMatrix4(GL.GetUniformLocation(program, name), true, ref matrix);
     }
     
     public void SetFloat(string name, float value)
