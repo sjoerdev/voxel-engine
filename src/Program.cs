@@ -46,7 +46,7 @@ class Window : GameWindow
     float shadowBias = 2.8f;
     bool shadows = true;
     bool vvao = true;
-    float renderScale = 0.5f;
+    float renderScale = 1.0f;
     Vector3 color = new Vector3(1, 0.4f, 0);
     
     static NativeWindowSettings nativeSettings = new NativeWindowSettings()
@@ -61,8 +61,8 @@ class Window : GameWindow
     protected override void OnLoad()
     {
         base.OnLoad();
-        rtshader = new Shader("shaders/rt-vert.glsl", "shaders/rt-frag.glsl");
-        fbshader = new Shader("shaders/fb-vert.glsl", "shaders/fb-frag.glsl");
+        rtshader = new Shader("res/shaders/rt-vert.glsl", "res/shaders/rt-frag.glsl");
+        fbshader = new Shader("res/shaders/fb-vert.glsl", "res/shaders/fb-frag.glsl");
         framebuffer = new Framebuffer();
         voxels = new Voxels();
         camera = new Camera();
@@ -249,8 +249,8 @@ class Window : GameWindow
                 if (currentDataSetType == 0) voxels.LoadSphere(256);
                 if (currentDataSetType == 1) voxels.LoadNoise(256);
                 if (currentDataSetType == 2) voxels.LoadOcclusionTest(256);
-                if (currentDataSetType == 3) voxels.LoadVox("vox/dragon.vox");
-                if (currentDataSetType == 4) voxels.LoadVox("vox/nymphe.vox");
+                if (currentDataSetType == 3) voxels.LoadVox("res/models/dragon.vox");
+                if (currentDataSetType == 4) voxels.LoadVox("res/models/nymphe.vox");
             }
         }
 

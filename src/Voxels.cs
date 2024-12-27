@@ -11,7 +11,7 @@ public class Voxels
 
     public Voxels()
     {
-        LoadVox("vox/dragon.vox");
+        LoadVox("res/models/dragon.vox");
     }
 
     public void Save()
