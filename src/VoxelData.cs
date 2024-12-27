@@ -3,13 +3,13 @@ using OpenTK.Mathematics;
 
 namespace Project;
 
-public class Voxels
+public class VoxelData
 {
     public Vector3[,,] array;
     public int texture;
     public Vector3i size;
 
-    public Voxels()
+    public VoxelData()
     {
         LoadVox("res/models/dragon.vox");
     }
@@ -23,15 +23,15 @@ public class Voxels
     {
         array = Serialization.DeserializeVoxelsBinary("voxeldata", size);
         GenTexture();
-        Ambient.Init(this);
+        AmbientOcclusion.Init(this);
     }
 
     public void LoadVox(string path)
     {
-        array = Vox.ReadVox(path);
+        array = VoxModelReader.ReadVox(path);
         size = GetSize(array);
         GenTexture();
-        Ambient.Init(this);
+        AmbientOcclusion.Init(this);
     }
 
     public void LoadSphere(int size)
@@ -53,7 +53,7 @@ public class Voxels
 
         array = sphere;
         GenTexture();
-        Ambient.Init(this);
+        AmbientOcclusion.Init(this);
     }
 
     public void LoadOcclusionTest(int size)
@@ -78,7 +78,7 @@ public class Voxels
 
         array = voxels;
         GenTexture();
-        Ambient.Init(this);
+        AmbientOcclusion.Init(this);
     }
 
     public void LoadNoise(int size)
@@ -86,14 +86,14 @@ public class Voxels
         this.size = Vector3i.One * size;
         Vector3[,,] noise = new Vector3[size, size, size];
         Random random = new Random();
-        Noise.Seed = random.Next(100, 10000);
+        SimplexNoise.Seed = random.Next(100, 10000);
         Parallel.For(0, size, x =>
         {
             for (int y = 0; y < size; y++)
             {
                 for (int z = 0; z < size; z++)
                 {
-                    var filled = Noise.CalcPixel3D(x, y, z, 0.0075f) / 255 > 0.5f;
+                    var filled = SimplexNoise.CalcPixel3D(x, y, z, 0.0075f) / 255 > 0.5f;
                     if (filled) noise[x, y, z] = new Vector3(0.4f, 0.4f, 0.8f);
                 }
             }
@@ -101,7 +101,7 @@ public class Voxels
 
         array = noise;
         GenTexture();
-        Ambient.Init(this);
+        AmbientOcclusion.Init(this);
     }
 
     public void GenTexture()
@@ -187,7 +187,7 @@ public class Voxels
         GL.TexSubImage3D(TextureTarget.Texture3D, 0, corner.X, corner.Y, corner.Z, radius, radius, radius, PixelFormat.Rgb, PixelType.Float, newSubData);
 
         // update vvao
-        Ambient.CalcChanged(this, voxelsToChange, corner);
+        AmbientOcclusion.CalcChanged(this, voxelsToChange, corner);
     }
 
     public Vector3i VoxelTrace(Vector3 pos, Vector3 dir, int maxSteps)

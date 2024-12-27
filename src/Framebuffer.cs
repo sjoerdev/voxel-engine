@@ -21,7 +21,7 @@ public class Framebuffer
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
-    public void Show(int width, int height, Shader shader)
+    public void Show(int width, int height, FullscreenShader shader)
     {
         GL.Viewport(0, 0, width, height);
         GL.UseProgram(shader.program);

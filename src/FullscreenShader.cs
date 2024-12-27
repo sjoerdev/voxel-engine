@@ -3,12 +3,12 @@ using OpenTK.Mathematics;
 
 namespace Project;
 
-public class Shader
+public class FullscreenShader
 {
     public int program;
     public int vao;
 
-    public Shader(string vert, string frag)
+    public FullscreenShader(string vert, string frag)
     {
         CompileProgram(vert, frag);
         vao = CreateVertexArray();

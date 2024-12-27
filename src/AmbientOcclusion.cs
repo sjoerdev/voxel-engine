@@ -3,35 +3,35 @@ using OpenTK.Mathematics;
 
 namespace Project;
 
-public static class Ambient
+public static class AmbientOcclusion
 {
     public static float[,,] array;
     public static int texture;
     public static int distance = 32;
     public static Vector3i size;
 
-    public static void Scale(Voxels voxels)
+    public static void Scale(VoxelData voxeldata)
     {
-        size = voxels.size / distance;
+        size = voxeldata.size / distance;
         array = new float[size.X, size.Y, size.Z];
     }
 
-    public static void Init(Voxels voxels)
+    public static void Init(VoxelData voxeldata)
     {
-        Scale(voxels);
-        CalcAll(voxels);
+        Scale(voxeldata);
+        CalcAll(voxeldata);
         GenTexture();
     }
 
-    public static void CalcChanged(Voxels voxels, List<Vector3i> changedVoxels, Vector3i corner)
+    public static void CalcChanged(VoxelData voxeldata, List<Vector3i> changedVoxels, Vector3i corner)
     {
         List<Vector3i> changedBoxes = new List<Vector3i>();
         foreach (var voxel in changedVoxels) if (!changedBoxes.Contains((voxel + corner) / distance)) changedBoxes.Add((voxel + corner) / distance);
-        foreach (var box in changedBoxes) CalcBox(box, voxels);
-        UpdateTexture(voxels);
+        foreach (var box in changedBoxes) CalcBox(box, voxeldata);
+        UpdateTexture(voxeldata);
     }
 
-    public static void CalcBox(Vector3i box, Voxels voxels)
+    public static void CalcBox(Vector3i box, VoxelData voxeldata)
     {
         float total = distance * distance * distance;
         float filled = 0;
@@ -43,7 +43,7 @@ public static class Ambient
                 for (int vz = 0; vz < distance; vz++)
                 {
                     var coord = new Vector3i(box.X * distance + vx, box.Y * distance + vy, box.Z * distance + vz);
-                    if (IsInBounds(coord, voxels.array) && voxels.array[coord.X, coord.Y, coord.Z] != Vector3.Zero) filled++;
+                    if (IsInBounds(coord, voxeldata.array) && voxeldata.array[coord.X, coord.Y, coord.Z] != Vector3.Zero) filled++;
                 }
             }
         }
@@ -52,7 +52,7 @@ public static class Ambient
         if (IsInBounds(box, array)) array[box.X, box.Y, box.Z] = ao;
     }
 
-    public static void CalcAll(Voxels voxels)
+    public static void CalcAll(VoxelData voxeldata)
     {
         Parallel.For(0, size.X, x =>
         {
@@ -60,7 +60,7 @@ public static class Ambient
             {
                 for (int z = 0; z < size.Z; z++)
                 {
-                    CalcBox(new Vector3i(x, y, z), voxels);
+                    CalcBox(new Vector3i(x, y, z), voxeldata);
                 }
             }
         });
@@ -93,7 +93,7 @@ public static class Ambient
         GL.TexParameter(TextureTarget.Texture3D, TextureParameterName.TextureWrapR, (int)TextureWrapMode.ClampToBorder);
     }
 
-    public static void UpdateTexture(Voxels voxels)
+    public static void UpdateTexture(VoxelData voxeldata)
     {
         // rotate data (dont know why this is needed, but whatever, it works)
         float[,,] rotated = new float[size.Z, size.Y, size.X];

@@ -9,7 +9,7 @@ namespace Project;
 // Based on work by Heikki Törmälä (2012) and Stefan Gustavson (2006).
 // Implementation of the Perlin simplex noise, an improved Perlin noise algorithm.
 // Based loosely on SimplexNoise1234 by Stefan Gustavson: http://staffwww.itn.liu.se/~stegu/aqsis/aqsis-newnoise/
-public static class Noise
+public static class SimplexNoise
 {
     public static float[] Calc1D(int width, float scale)
     {
@@ -53,7 +53,7 @@ public static class Noise
         return Generate(x * scale, y * scale, z * scale) * 128 + 128;
     }
 
-    static Noise()
+    static SimplexNoise()
     {
         _perm = new byte[PermOriginal.Length];
         PermOriginal.CopyTo(_perm, 0);

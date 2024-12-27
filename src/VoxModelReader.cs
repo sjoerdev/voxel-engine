@@ -2,7 +2,7 @@ using OpenTK.Mathematics;
 
 namespace Project;
 
-public class Vox
+public static class VoxModelReader
 {
     public static Vector3[,,] ReadVox(string path)
     {

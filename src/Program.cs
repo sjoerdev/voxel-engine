@@ -19,9 +19,9 @@ class Window : GameWindow
 {
     ImGuiHelper imguiHelper;
     Camera camera;
-    Voxels voxels;
-    Shader rtshader;
-    Shader fbshader;
+    VoxelData voxeldata;
+    FullscreenShader rt_fullscreenshader;
+    FullscreenShader fb_fullscreenshader;
     Framebuffer framebuffer;
 
     bool firstMouseMovement = true;
@@ -61,13 +61,13 @@ class Window : GameWindow
     protected override void OnLoad()
     {
         base.OnLoad();
-        rtshader = new Shader("res/shaders/rt-vert.glsl", "res/shaders/rt-frag.glsl");
-        fbshader = new Shader("res/shaders/fb-vert.glsl", "res/shaders/fb-frag.glsl");
+        rt_fullscreenshader = new FullscreenShader("res/shaders/rt-vert.glsl", "res/shaders/rt-frag.glsl");
+        fb_fullscreenshader = new FullscreenShader("res/shaders/fb-vert.glsl", "res/shaders/fb-frag.glsl");
         framebuffer = new Framebuffer();
-        voxels = new Voxels();
+        voxeldata = new VoxelData();
         camera = new Camera();
         imguiHelper = new ImGuiHelper(Size.X, Size.Y);
-        Ambient.Init(voxels);
+        AmbientOcclusion.Init(voxeldata);
     }
 
     protected override void OnRenderFrame(FrameEventArgs args)
@@ -84,8 +84,8 @@ class Window : GameWindow
 
         framebuffer.Clear();
         rtshaderUniforms();
-        rtshader.RenderToFramebuffer(Size, renderScale, framebuffer);
-        framebuffer.Show(Size.X, Size.Y, fbshader);
+        rt_fullscreenshader.RenderToFramebuffer(Size, renderScale, framebuffer);
+        framebuffer.Show(Size.X, Size.Y, fb_fullscreenshader);
 
         imguiHelper.Render();
         Context.SwapBuffers();
@@ -108,9 +108,9 @@ class Window : GameWindow
             float aspect = (float)Size.X / (float)Size.Y;
             var uv = ndc * new Vector2(aspect, 1);
             Vector3 dir = (camera.viewMatrix * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
-            var position = voxels.VoxelTrace(camera.position, dir, 10000);
-            if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxels.SculptVoxelData(position, brushSize, color);
-            if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxels.SculptVoxelData(position, brushSize, Vector3.Zero);
+            var position = voxeldata.VoxelTrace(camera.position, dir, 10000);
+            if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 0) voxeldata.SculptVoxelData(position, brushSize, color);
+            if(mouse.IsButtonDown(MouseButton.Left) && currentBrushType == 1) voxeldata.SculptVoxelData(position, brushSize, Vector3.Zero);
             sculptTick += 1 / brushSpeed;
         }
 
@@ -125,35 +125,35 @@ class Window : GameWindow
         }
         lastMousePos = new Vector2(mouse.X, mouse.Y);
         cameraDistance -= mouse.ScrollDelta.Y * 10;
-        camera.RotateAround(voxels.size / 2, camOrbitRotation, cameraDistance);
+        camera.RotateAround(voxeldata.size / 2, camOrbitRotation, cameraDistance);
     }
 
     private void rtshaderUniforms()
     {
-        rtshader.UseShader();
+        rt_fullscreenshader.UseShader();
         
-        rtshader.SetMatrix4("view", camera.viewMatrix);
+        rt_fullscreenshader.SetMatrix4("view", camera.viewMatrix);
 
-        rtshader.SetTexture3("data", voxels.texture, 0);
-        rtshader.SetTexture3("ambientOcclusionData", Ambient.texture, 1);
+        rt_fullscreenshader.SetTexture3("data", voxeldata.texture, 0);
+        rt_fullscreenshader.SetTexture3("ambientOcclusionData", AmbientOcclusion.texture, 1);
         
-        rtshader.SetFloat("time", timePassed);
-        rtshader.SetFloat("shadowBias", shadowBias);
+        rt_fullscreenshader.SetFloat("time", timePassed);
+        rt_fullscreenshader.SetFloat("shadowBias", shadowBias);
 
-        rtshader.SetInt("debugView", debugView);
-        rtshader.SetInt("maxsteps", maxsteps);
-        rtshader.SetInt("aoDis", Ambient.distance);
+        rt_fullscreenshader.SetInt("debugView", debugView);
+        rt_fullscreenshader.SetInt("maxsteps", maxsteps);
+        rt_fullscreenshader.SetInt("aoDis", AmbientOcclusion.distance);
         
-        rtshader.SetBool("showDebugView", showDebugView);
-        rtshader.SetBool("canvasCheck", canvasCheck);
-        rtshader.SetBool("shadows", shadows);
-        rtshader.SetBool("vvao", vvao);
+        rt_fullscreenshader.SetBool("showDebugView", showDebugView);
+        rt_fullscreenshader.SetBool("canvasCheck", canvasCheck);
+        rt_fullscreenshader.SetBool("shadows", shadows);
+        rt_fullscreenshader.SetBool("vvao", vvao);
 
-        rtshader.SetVector2("resolution", (Vector2)Size);
+        rt_fullscreenshader.SetVector2("resolution", (Vector2)Size);
 
-        rtshader.SetVector3("camPos", camera.position);
-        rtshader.SetVector3("dataSize", (Vector3)voxels.size);
-        rtshader.SetVector3("ambientOcclusionDataSize", (Vector3)Ambient.size);
+        rt_fullscreenshader.SetVector3("camPos", camera.position);
+        rt_fullscreenshader.SetVector3("dataSize", (Vector3)voxeldata.size);
+        rt_fullscreenshader.SetVector3("ambientOcclusionDataSize", (Vector3)AmbientOcclusion.size);
         
     }
 
@@ -235,8 +235,8 @@ class Window : GameWindow
         // imgui serialization
         if (ImGui.CollapsingHeader("serialize"))
         {
-            if (ImGui.Button("save", new System.Numerics.Vector2(itemsWidth, 0))) voxels.Save();
-            if (ImGui.Button("load", new System.Numerics.Vector2(itemsWidth, 0))) voxels.Load();
+            if (ImGui.Button("save", new System.Numerics.Vector2(itemsWidth, 0))) voxeldata.Save();
+            if (ImGui.Button("load", new System.Numerics.Vector2(itemsWidth, 0))) voxeldata.Load();
         }
 
         // imgui voxeldata
@@ -246,11 +246,11 @@ class Window : GameWindow
             ImGui.SetNextItemWidth(itemsWidth); ImGui.Combo("dataset", ref currentDataSetType, dataSetType, dataSetType.Length);
             if (ImGui.Button("generate", new System.Numerics.Vector2(itemsWidth, 0)))
             {
-                if (currentDataSetType == 0) voxels.LoadSphere(256);
-                if (currentDataSetType == 1) voxels.LoadNoise(256);
-                if (currentDataSetType == 2) voxels.LoadOcclusionTest(256);
-                if (currentDataSetType == 3) voxels.LoadVox("res/models/dragon.vox");
-                if (currentDataSetType == 4) voxels.LoadVox("res/models/nymphe.vox");
+                if (currentDataSetType == 0) voxeldata.LoadSphere(256);
+                if (currentDataSetType == 1) voxeldata.LoadNoise(256);
+                if (currentDataSetType == 2) voxeldata.LoadOcclusionTest(256);
+                if (currentDataSetType == 3) voxeldata.LoadVox("res/models/dragon.vox");
+                if (currentDataSetType == 4) voxeldata.LoadVox("res/models/nymphe.vox");
             }
         }
 
