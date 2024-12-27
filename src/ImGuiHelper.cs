@@ -226,7 +226,7 @@ outputColor = color * texture(in_fontTexture, texCoord);
         io.DeltaTime = deltaSeconds; // DeltaTime is in seconds.
     }
 
-    readonly List<char> PressedChars = new List<char>();
+    readonly List<char> PressedChars = [];
 
     private void UpdateImGuiInput(GameWindow wnd)
     {

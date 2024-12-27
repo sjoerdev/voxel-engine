@@ -25,7 +25,7 @@ public static class AmbientOcclusion
 
     public static void CalcChanged(VoxelData voxeldata, List<Vector3i> changedVoxels, Vector3i corner)
     {
-        List<Vector3i> changedBoxes = new List<Vector3i>();
+        List<Vector3i> changedBoxes = [];
         foreach (var voxel in changedVoxels) if (!changedBoxes.Contains((voxel + corner) / distance)) changedBoxes.Add((voxel + corner) / distance);
         foreach (var box in changedBoxes) CalcBox(box, voxeldata);
         UpdateTexture(voxeldata);

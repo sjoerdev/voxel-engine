@@ -32,7 +32,7 @@ class Window : GameWindow
     float sculptTick = 0;
     bool showSettings = true;
 
-    List<float> frametimes = new List<float>();
+    List<float> frametimes = [];
     int maxsteps = 1000;
     bool canvasCheck = true;
     bool showDebugView = false;

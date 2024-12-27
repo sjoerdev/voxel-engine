@@ -149,7 +149,7 @@ public class VoxelData
         corner -= delta;
 
         // calculate chich voxels to change
-        List<Vector3i> voxelsToChange = new List<Vector3i>();
+        List<Vector3i> voxelsToChange = [];
         for (int x = 0; x < radius; x++)
         {
             for (int y = 0; y < radius; y++)

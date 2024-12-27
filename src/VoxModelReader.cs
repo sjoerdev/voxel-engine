@@ -70,7 +70,7 @@ public static class VoxModelReader
                     }
                     else if (subChunk == "XYZI") // model voxels
                     {
-                        List<Vector4i> voxels = new List<Vector4i>();
+                        List<Vector4i> voxels = [];
                         int numVoxels = reader.ReadInt32();
                         for (int i = 0; i < numVoxels; i++)
                         {
@@ -144,7 +144,7 @@ public static class VoxModelReader
         }
 
         // add up all information
-        List<Model> models = new List<Model>();
+        List<Model> models = [];
         for (int i = 0; i < models_s.Count; i++)
         {
             Model model = new Model
@@ -170,7 +170,7 @@ public static class VoxModelReader
     private static string ReadString(BinaryReader reader)
     {
         int bytesAmount = reader.ReadInt32();
-        List<byte> bytes = new List<byte>();
+        List<byte> bytes = [];
         for (int i = 0; i < bytesAmount; i++)
         {
             byte currentByte = reader.ReadByte();
@@ -198,7 +198,7 @@ public static class VoxModelReader
         public Model()
         {
             size = Vector3i.Zero;
-            voxels = new List<Vector4i>();
+            voxels = [];
             position = Vector3i.Zero;
             palette = new Vector3[256];
         }
