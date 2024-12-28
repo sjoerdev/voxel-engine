@@ -1,5 +1,5 @@
 ## Sjoerd's Voxel Engine
-This engine tries to ray-trace pure voxels as fast as possible.
+This engine tries to ray-trace pure voxels as fast as possible without sacrificing dynamic geometry.
 
 ## Features:
 - Fully dynamic geometry
@@ -14,6 +14,6 @@ This engine tries to ray-trace pure voxels as fast as possible.
 - Visual C++ Redistributable
 
 ## Gallery:
-<img width="720" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/89c333fb-b86f-43df-ad6d-3573df01cd04">
-<img width="720" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/edc69a08-0866-45f5-90d3-c8090921ba0d">
-<img width="720" src="https://github.com/sjoerdev/voxel-engine/assets/59654421/c5facacd-77df-433c-8ec6-3aefabd4e39e">
+<img width="720" src="https://github.com/user-attachments/assets/bb284e3e-a679-4039-aa6d-ea38b602639c">
+<img width="720" src="https://github.com/user-attachments/assets/f84cac27-800a-49a6-bd16-bb4c33ca6244">
+<img width="720" src="https://github.com/user-attachments/assets/0e3ffc01-bed3-4e48-8e44-761d525dd76c">
