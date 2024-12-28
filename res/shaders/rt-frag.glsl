@@ -80,7 +80,7 @@ vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps)
 
 vec3 VoxelNormal(vec3 coord)
 {
-    int samples = 3;
+    int samples = 2;
     int box = samples * 2 + 1;
 
     vec3 normal = vec3(0);
