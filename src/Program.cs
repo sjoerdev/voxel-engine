@@ -6,76 +6,72 @@ using ImGuiNET;
 
 namespace Project;
 
-class Program
+static class Program
 {
+    static GameWindow window;
+    static ImGuiHelper imguiHelper;
+    static Camera camera;
+    static VoxelData voxeldata;
+    static FullscreenShader rt_fullscreenshader;
+    static FullscreenShader fb_fullscreenshader;
+    static Framebuffer framebuffer;
+
+    static bool firstMouseMovement = true;
+    static Vector2 lastMousePos;
+    static Vector2 camOrbitRotation;
+    static float cameraDistance = 600;
+    static float timePassed;
+    static float sculptTick = 0;
+    static bool showSettings = true;
+
+    static List<float> frametimes = [];
+    static int maxsteps = 1000;
+    static bool canvasCheck = true;
+    static bool showDebugView = false;
+    static int debugView = 0;
+    static int currentBrushType = 0;
+    static int currentDataSetType = 0;
+    static int brushSize = 24;
+    static float brushSpeed = 30;
+    static bool vsync = false;
+    static bool fullscreen;
+    static float shadowBias = 2.8f;
+    static bool shadows = true;
+    static bool vvao = true;
+    static float renderScale = 1.0f;
+    static Vector3 color = new Vector3(1, 0.4f, 0);
+
     static void Main()
     {
-        Window window = new Window();
+        var nativesettings = NativeWindowSettings.Default;
+        nativesettings.Size = new Vector2i(1280, 720);
+        nativesettings.Title = "Sjoerd's Voxel Engine";
+        window = new GameWindow(GameWindowSettings.Default, nativesettings);
+        window.Load += WindowLoad;
+        window.RenderFrame += WindowRender;
+        window.Resize += WindowResize;
+        window.TextInput += WindowTextInput;
+        window.MouseWheel += WindowMouseWheelInput;
         window.Run();
+        window.Dispose();
     }
-}
 
-class Window : GameWindow
-{
-    ImGuiHelper imguiHelper;
-    Camera camera;
-    VoxelData voxeldata;
-    FullscreenShader rt_fullscreenshader;
-    FullscreenShader fb_fullscreenshader;
-    Framebuffer framebuffer;
-
-    bool firstMouseMovement = true;
-    Vector2 lastMousePos;
-    Vector2 camOrbitRotation;
-    float cameraDistance = 600;
-    float timePassed;
-    float sculptTick = 0;
-    bool showSettings = true;
-
-    List<float> frametimes = [];
-    int maxsteps = 1000;
-    bool canvasCheck = true;
-    bool showDebugView = false;
-    int debugView = 0;
-    int currentBrushType = 0;
-    int currentDataSetType = 0;
-    int brushSize = 24;
-    float brushSpeed = 30;
-    bool vsync = false;
-    bool fullscreen;
-    float shadowBias = 2.8f;
-    bool shadows = true;
-    bool vvao = true;
-    float renderScale = 1.0f;
-    Vector3 color = new Vector3(1, 0.4f, 0);
-    
-    static NativeWindowSettings nativeSettings = new NativeWindowSettings()
+    static void WindowLoad()
     {
-        Title = "Sjoerd's Voxel Engine",
-        APIVersion = new Version(3, 3),
-        Size = new Vector2i(1280, 720)
-    };
-
-    public Window() : base(GameWindowSettings.Default, nativeSettings){}
-
-    protected override void OnLoad()
-    {
-        base.OnLoad();
         rt_fullscreenshader = new FullscreenShader("res/shaders/rt-vert.glsl", "res/shaders/rt-frag.glsl");
         fb_fullscreenshader = new FullscreenShader("res/shaders/fb-vert.glsl", "res/shaders/fb-frag.glsl");
         framebuffer = new Framebuffer();
         voxeldata = new VoxelData();
         camera = new Camera();
-        imguiHelper = new ImGuiHelper(Size.X, Size.Y);
+        imguiHelper = new ImGuiHelper(window.Size.X, window.Size.Y);
         AmbientOcclusion.Init(voxeldata);
     }
 
-    protected override void OnRenderFrame(FrameEventArgs args)
+    static void WindowRender(FrameEventArgs args)
     {
-        base.OnRenderFrame(args);
         float delta = (float)args.Time;
-        VSync = vsync ? VSyncMode.On : VSyncMode.Off;
-        imguiHelper.Update(this, delta);
+        window.VSync = vsync ? VSyncMode.On : VSyncMode.Off;
+        imguiHelper.Update(window, delta);
         timePassed += delta;
         frametimes.Add(delta);
 
@@ -84,19 +80,19 @@ class Window : GameWindow
 
         framebuffer.Clear();
         rtshaderUniforms();
-        rt_fullscreenshader.RenderToFramebuffer(Size, renderScale, framebuffer);
-        framebuffer.Show(Size.X, Size.Y, fb_fullscreenshader);
+        rt_fullscreenshader.RenderToFramebuffer(window.Size, renderScale, framebuffer);
+        framebuffer.Show(window.Size.X, window.Size.Y, fb_fullscreenshader);
 
         imguiHelper.Render();
-        Context.SwapBuffers();
+        window.Context.SwapBuffers();
     }
 
-    private void ApplyInput()
+    static void ApplyInput()
     {
         // start input
-        var mouse = MouseState;
-        var input = KeyboardState;
-        if (!IsFocused) return;
+        var mouse = window.MouseState;
+        var input = window.KeyboardState;
+        if (!window.IsFocused) return;
 
         // toggle settings
         if (input.IsKeyPressed(Keys.F1)) showSettings = !showSettings;
@@ -104,8 +100,8 @@ class Window : GameWindow
         // voxel sculpting
         if (timePassed > sculptTick)
         {
-            var ndc = (mouse.Position / Size) - new Vector2(0.5f, 0.5f);
-            float aspect = (float)Size.X / (float)Size.Y;
+            var ndc = (mouse.Position / window.Size) - new Vector2(0.5f, 0.5f);
+            float aspect = (float)window.Size.X / (float)window.Size.Y;
             var uv = ndc * new Vector2(aspect, 1);
             Vector3 dir = (camera.viewMatrix * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
             var position = voxeldata.VoxelTrace(camera.position, dir, 10000);
@@ -128,7 +124,7 @@ class Window : GameWindow
         camera.RotateAround(voxeldata.size / 2, camOrbitRotation, cameraDistance);
     }
 
-    private void rtshaderUniforms()
+    static void rtshaderUniforms()
     {
         rt_fullscreenshader.UseShader();
         
@@ -149,7 +145,7 @@ class Window : GameWindow
         rt_fullscreenshader.SetBool("shadows", shadows);
         rt_fullscreenshader.SetBool("vvao", vvao);
 
-        rt_fullscreenshader.SetVector2("resolution", (Vector2)Size);
+        rt_fullscreenshader.SetVector2("resolution", (Vector2)window.Size);
 
         rt_fullscreenshader.SetVector3("camPos", camera.position);
         rt_fullscreenshader.SetVector3("dataSize", (Vector3)voxeldata.size);
@@ -157,7 +153,7 @@ class Window : GameWindow
         
     }
 
-    private void SettingsWindow()
+    static void SettingsWindow()
     {
         // imgui start
         ImGui.SetNextWindowPos(new System.Numerics.Vector2(8, 8), ImGuiCond.Once);
@@ -204,12 +200,12 @@ class Window : GameWindow
             ImGui.Checkbox("vsync", ref vsync);
             if (ImGui.Checkbox("fullscreen", ref fullscreen))
             {
-                if (fullscreen) WindowState = WindowState.Fullscreen;
+                if (fullscreen) window.WindowState = WindowState.Fullscreen;
                 else
                 {
-                    WindowState = WindowState.Normal;
-                    Size = new Vector2i(1280, 720);
-                    CenterWindow();
+                    window.WindowState = WindowState.Normal;
+                    window.Size = new Vector2i(1280, 720);
+                    window.CenterWindow();
                 }
             }
         }
@@ -258,7 +254,7 @@ class Window : GameWindow
         ImGui.End();
     }
 
-    protected override void OnResize(ResizeEventArgs arg) { base.OnResize(arg); imguiHelper.WindowResized(Size.X, Size.Y); }
-    protected override void OnTextInput(TextInputEventArgs arg) { base.OnTextInput(arg); imguiHelper.PressChar((char)arg.Unicode); }
-    protected override void OnMouseWheel(MouseWheelEventArgs arg) { base.OnMouseWheel(arg); imguiHelper.MouseScroll(arg.Offset); }
+    static void WindowResize(ResizeEventArgs arg) => imguiHelper.WindowResized(window.Size.X, window.Size.Y);
+    static void WindowTextInput(TextInputEventArgs arg) => imguiHelper.PressChar((char)arg.Unicode);
+    static void WindowMouseWheelInput(MouseWheelEventArgs arg) => imguiHelper.MouseScroll(arg.Offset);
 }
