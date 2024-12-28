@@ -23,7 +23,6 @@ static class Program
     static float timePassed;
     static float sculptTick = 0;
     static bool showSettings = true;
-
     static List<float> frametimes = [];
     static int maxsteps = 1000;
     static bool canvasCheck = true;
@@ -79,7 +78,7 @@ static class Program
         if (showSettings) SettingsWindow();
 
         framebuffer.Clear();
-        rtshaderUniforms();
+        SetRayTracingUniforms();
         rt_fullscreenshader.RenderToFramebuffer(window.Size, renderScale, framebuffer);
         framebuffer.Show(window.Size.X, window.Size.Y, fb_fullscreenshader);
 
@@ -124,33 +123,25 @@ static class Program
         camera.RotateAround(voxeldata.size / 2, camOrbitRotation, cameraDistance);
     }
 
-    static void rtshaderUniforms()
+    static void SetRayTracingUniforms()
     {
         rt_fullscreenshader.UseShader();
-        
         rt_fullscreenshader.SetMatrix4("view", camera.viewMatrix);
-
         rt_fullscreenshader.SetTexture3("data", voxeldata.texture, 0);
         rt_fullscreenshader.SetTexture3("ambientOcclusionData", AmbientOcclusion.texture, 1);
-        
         rt_fullscreenshader.SetFloat("time", timePassed);
         rt_fullscreenshader.SetFloat("shadowBias", shadowBias);
-
         rt_fullscreenshader.SetInt("debugView", debugView);
         rt_fullscreenshader.SetInt("maxsteps", maxsteps);
         rt_fullscreenshader.SetInt("aoDis", AmbientOcclusion.distance);
-        
         rt_fullscreenshader.SetBool("showDebugView", showDebugView);
         rt_fullscreenshader.SetBool("canvasCheck", canvasCheck);
         rt_fullscreenshader.SetBool("shadows", shadows);
         rt_fullscreenshader.SetBool("vvao", vvao);
-
         rt_fullscreenshader.SetVector2("resolution", (Vector2)window.Size);
-
         rt_fullscreenshader.SetVector3("camPos", camera.position);
         rt_fullscreenshader.SetVector3("dataSize", (Vector3)voxeldata.size);
         rt_fullscreenshader.SetVector3("ambientOcclusionDataSize", (Vector3)AmbientOcclusion.size);
-        
     }
 
     static void SettingsWindow()
