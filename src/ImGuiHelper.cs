@@ -29,10 +29,14 @@ public class ImGuiHelper : IDisposable
     /// <summary>
     /// Constructs a new ImGuiController.
     /// </summary>
-    public unsafe ImGuiHelper(int width, int height)
+    public unsafe ImGuiHelper(GameWindow window)
     {
-        _windowWidth = width;
-        _windowHeight = height;
+        window.Resize += (args) => WindowResized(window.ClientSize.X, window.ClientSize.Y);;
+        window.TextInput += (args) => PressChar((char)args.Unicode);
+        window.MouseWheel += (args) => MouseScroll(args.Offset);
+
+        _windowWidth = window.ClientSize.X;
+        _windowHeight = window.ClientSize.Y;
 
         int major = GL.GetInteger(GetPName.MajorVersion);
         int minor = GL.GetInteger(GetPName.MinorVersion);

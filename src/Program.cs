@@ -48,9 +48,6 @@ static class Program
         window = new GameWindow(GameWindowSettings.Default, nativesettings);
         window.Load += WindowLoad;
         window.RenderFrame += WindowRender;
-        window.Resize += WindowResize;
-        window.TextInput += WindowTextInput;
-        window.MouseWheel += WindowMouseWheelInput;
         window.Run();
         window.Dispose();
     }
@@ -62,7 +59,7 @@ static class Program
         framebuffer = new Framebuffer();
         voxeldata = new VoxelData();
         camera = new Camera();
-        imguiHelper = new ImGuiHelper(window.ClientSize.X, window.ClientSize.Y);
+        imguiHelper = new ImGuiHelper(window);
         AmbientOcclusion.Init(voxeldata);
     }
 
@@ -151,7 +148,7 @@ static class Program
         ImGui.SetNextWindowSizeConstraints(new System.Numerics.Vector2(256, 32), new System.Numerics.Vector2(720, 720));
         ImGui.Begin("settings", ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.AlwaysAutoResize);
         int itemsWidth = 140;
-
+        
         // imgui metrics
         if (ImGui.CollapsingHeader("metrics"))
         {
@@ -244,8 +241,4 @@ static class Program
         // imgui end
         ImGui.End();
     }
-
-    static void WindowResize(ResizeEventArgs arg) => imguiHelper.WindowResized(window.ClientSize.X, window.ClientSize.Y);
-    static void WindowTextInput(TextInputEventArgs arg) => imguiHelper.PressChar((char)arg.Unicode);
-    static void WindowMouseWheelInput(MouseWheelEventArgs arg) => imguiHelper.MouseScroll(arg.Offset);
 }
