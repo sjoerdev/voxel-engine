@@ -43,7 +43,7 @@ static class Program
     static void Main()
     {
         var nativesettings = NativeWindowSettings.Default;
-        nativesettings.Size = new Vector2i(1280, 720);
+        nativesettings.ClientSize = new Vector2i(1280, 720);
         nativesettings.Title = "Sjoerd's Voxel Engine";
         window = new GameWindow(GameWindowSettings.Default, nativesettings);
         window.Load += WindowLoad;
@@ -62,7 +62,7 @@ static class Program
         framebuffer = new Framebuffer();
         voxeldata = new VoxelData();
         camera = new Camera();
-        imguiHelper = new ImGuiHelper(window.Size.X, window.Size.Y);
+        imguiHelper = new ImGuiHelper(window.ClientSize.X, window.ClientSize.Y);
         AmbientOcclusion.Init(voxeldata);
     }
 
@@ -79,8 +79,8 @@ static class Program
 
         framebuffer.Clear();
         SetRayTracingUniforms();
-        rt_fullscreenshader.RenderToFramebuffer(window.Size, renderScale, framebuffer);
-        framebuffer.Show(window.Size.X, window.Size.Y, fb_fullscreenshader);
+        rt_fullscreenshader.RenderToFramebuffer(window.ClientSize, renderScale, framebuffer);
+        framebuffer.Show(window.ClientSize.X, window.ClientSize.Y, fb_fullscreenshader);
 
         imguiHelper.Render();
         window.Context.SwapBuffers();
@@ -99,8 +99,8 @@ static class Program
         // voxel sculpting
         if (timePassed > sculptTick)
         {
-            var ndc = (mouse.Position / window.Size) - new Vector2(0.5f, 0.5f);
-            float aspect = (float)window.Size.X / (float)window.Size.Y;
+            var ndc = (mouse.Position / window.ClientSize) - new Vector2(0.5f, 0.5f);
+            float aspect = (float)window.ClientSize.X / (float)window.ClientSize.Y;
             var uv = ndc * new Vector2(aspect, 1);
             Vector3 dir = (camera.viewMatrix * new Vector4(uv.X, -uv.Y, 1, 1)).Xyz;
             var position = voxeldata.VoxelTrace(camera.position, dir, 10000);
@@ -138,7 +138,7 @@ static class Program
         rt_fullscreenshader.SetBool("canvasCheck", canvasCheck);
         rt_fullscreenshader.SetBool("shadows", shadows);
         rt_fullscreenshader.SetBool("vvao", vvao);
-        rt_fullscreenshader.SetVector2("resolution", (Vector2)window.Size);
+        rt_fullscreenshader.SetVector2("resolution", (Vector2)window.ClientSize);
         rt_fullscreenshader.SetVector3("camPos", camera.position);
         rt_fullscreenshader.SetVector3("dataSize", (Vector3)voxeldata.size);
         rt_fullscreenshader.SetVector3("ambientOcclusionDataSize", (Vector3)AmbientOcclusion.size);
@@ -195,7 +195,7 @@ static class Program
                 else
                 {
                     window.WindowState = WindowState.Normal;
-                    window.Size = new Vector2i(1280, 720);
+                    window.ClientSize = new Vector2i(1280, 720);
                     window.CenterWindow();
                 }
             }
@@ -245,7 +245,7 @@ static class Program
         ImGui.End();
     }
 
-    static void WindowResize(ResizeEventArgs arg) => imguiHelper.WindowResized(window.Size.X, window.Size.Y);
+    static void WindowResize(ResizeEventArgs arg) => imguiHelper.WindowResized(window.ClientSize.X, window.ClientSize.Y);
     static void WindowTextInput(TextInputEventArgs arg) => imguiHelper.PressChar((char)arg.Unicode);
     static void WindowMouseWheelInput(MouseWheelEventArgs arg) => imguiHelper.MouseScroll(arg.Offset);
 }
