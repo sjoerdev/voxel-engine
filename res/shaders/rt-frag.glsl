@@ -177,7 +177,11 @@ void main()
     {
         int sdwsteps;
         vec3 sdwhitpos;
-        vec3 start = hitpos + lightdir + (normal * shadowBias);
+
+        vec3 start;
+        if (perVoxelShading) start = voxel + vec3(0.5) + lightdir + (normal * shadowBias);
+        else start = hitpos + (normal * 0.00001);
+
         vec3 shadowVoxel = VoxelTrace(start, lightdir, sdwsteps, sdwhitpos);
         if (shadowVoxel != vec3(0))
         {
