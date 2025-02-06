@@ -85,20 +85,19 @@ vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps, out vec3 hitpos)
 
 vec3 PerPixelNormal(vec3 voxel, vec3 hitpos)
 {
-    float epsilon = 0.001;
-    vec3 normal;
-
     vec3 diff = hitpos - voxel;
-
-    if (distance(diff.x, 1) < epsilon) normal.x = 1;
-    if (distance(diff.x, 0) < epsilon) normal.x = -1;
-    if (distance(diff.y, 1) < epsilon) normal.y = 1;
-    if (distance(diff.y, 0) < epsilon) normal.y = -1;
-    if (distance(diff.z, 1) < epsilon) normal.z = 1;
-    if (distance(diff.z, 0) < epsilon) normal.z = -1;
-
-    return normal;
+    
+    // compute distance to nearest face
+    float dx = diff.x < 0.5 ? diff.x : 1.0 - diff.x;
+    float dy = diff.y < 0.5 ? diff.y : 1.0 - diff.y;
+    float dz = diff.z < 0.5 ? diff.z : 1.0 - diff.z;
+    
+    // determine the axis with min dist and return the corresponding normal
+    if (dx < dy && dx < dz) return vec3(diff.x < 0.5 ? -1 : 1, 0, 0);
+    else if (dy < dz) return vec3(0, diff.y < 0.5 ? -1 : 1, 0);
+    else return vec3(0, 0, diff.z < 0.5 ? -1 : 1);
 }
+
 
 vec3 PerVoxelNormal(vec3 voxel)
 {
