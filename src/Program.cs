@@ -36,6 +36,7 @@ static class Program
     static bool fullscreen;
     static float shadowBias = 2.8f;
     static bool shadows = true;
+    static bool perVoxelShading = true;
     static bool vvao = true;
     static float renderScale = 1.0f;
     static Vector3 color = new Vector3(1, 0.4f, 0);
@@ -134,6 +135,7 @@ static class Program
         rt_fullscreenshader.SetBool("showDebugView", showDebugView);
         rt_fullscreenshader.SetBool("canvasCheck", canvasCheck);
         rt_fullscreenshader.SetBool("shadows", shadows);
+        rt_fullscreenshader.SetBool("perVoxelShading", perVoxelShading);
         rt_fullscreenshader.SetBool("vvao", vvao);
         rt_fullscreenshader.SetVector2("resolution", (Vector2)window.ClientSize);
         rt_fullscreenshader.SetVector3("camPos", camera.position);
@@ -203,6 +205,7 @@ static class Program
         {
             ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderInt("ray steps", ref maxsteps, 10, 2000);
             ImGui.SetNextItemWidth(itemsWidth); ImGui.SliderFloat("shadow bias", ref shadowBias, 0.1f, 4);
+            ImGui.Checkbox("per voxel", ref perVoxelShading);
             ImGui.Checkbox("shadows", ref shadows);
             ImGui.Checkbox("vvao", ref vvao);
             ImGui.Checkbox("canvas check", ref canvasCheck);

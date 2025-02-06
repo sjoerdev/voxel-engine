@@ -10,6 +10,7 @@ uniform bool canvasCheck;
 uniform bool showDebugView;
 uniform int debugView;
 uniform bool shadows;
+uniform bool perVoxelShading;
 uniform float shadowBias;
 uniform bool vvao;
 uniform int maxsteps;
@@ -157,7 +158,7 @@ void main()
     vec3 albedo = Sample(voxel);
 
     // calc normals
-    vec3 normal = PerPixelNormal(voxel, hitpos);
+    vec3 normal = perVoxelShading ? PerVoxelNormal(voxel) : PerPixelNormal(voxel, hitpos);
 
     // define light
     vec3 lightdir = vec3(1, 0.6, 1);
@@ -176,7 +177,7 @@ void main()
     {
         int sdwsteps;
         vec3 sdwhitpos;
-        vec3 start = voxel + lightdir + (normal * shadowBias);
+        vec3 start = hitpos + lightdir + (normal * shadowBias);
         vec3 shadowVoxel = VoxelTrace(start, lightdir, sdwsteps, sdwhitpos);
         if (shadowVoxel != vec3(0))
         {
