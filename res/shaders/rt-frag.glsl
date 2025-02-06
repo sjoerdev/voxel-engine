@@ -51,7 +51,7 @@ bool OutsideCanvas(vec3 coord)
     else return false;
 }
 
-vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps)
+vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps, out vec3 hitpos)
 {
     vec3 result;
     vec3 stepsize = 1 / abs(dir);
@@ -60,6 +60,7 @@ vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps)
 
     while (true)
     {
+        float tStep = min(toboundry.x, min(toboundry.y, toboundry.z));
         bvec3 mask = lessThanEqual(toboundry, min(toboundry.yzx, toboundry.zxy));
         toboundry += vec3(mask) * stepsize;
         voxel += ivec3(vec3(mask)) * ivec3(sign(dir));
@@ -70,7 +71,11 @@ vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps)
         bool outside = canvasCheck && OutsideCanvas(voxel);
         bool anything = hit || toofar || outside;
 
-        if (hit) result = voxel;
+        if (hit)
+        {
+            result = voxel;
+            hitpos = eye + tStep * dir;
+        }
         if (toofar || outside) result = vec3(0);
         if (anything) break;
     }
@@ -78,7 +83,24 @@ vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps)
     return result;
 }
 
-vec3 VoxelNormal(vec3 coord)
+vec3 PerPixelNormal(vec3 voxel, vec3 hitpos)
+{
+    float epsilon = 0.001;
+    vec3 normal;
+
+    vec3 diff = hitpos - voxel;
+
+    if (distance(diff.x, 1) < epsilon) normal.x = 1;
+    if (distance(diff.x, 0) < epsilon) normal.x = -1;
+    if (distance(diff.y, 1) < epsilon) normal.y = 1;
+    if (distance(diff.y, 0) < epsilon) normal.y = -1;
+    if (distance(diff.z, 1) < epsilon) normal.z = 1;
+    if (distance(diff.z, 0) < epsilon) normal.z = -1;
+
+    return normal;
+}
+
+vec3 PerVoxelNormal(vec3 voxel)
 {
     int samples = 2;
     int box = samples * 2 + 1;
@@ -91,7 +113,7 @@ vec3 VoxelNormal(vec3 coord)
             for (int z = -samples; z <= samples; z++)
             {
                 vec3 offset = vec3(x, y, z);
-                if (offset != vec3(0) && Sample(coord + offset) != vec3(0)) normal += offset;
+                if (offset != vec3(0) && Sample(voxel + offset) != vec3(0)) normal += offset;
             }
         }
     }
@@ -122,7 +144,8 @@ void main()
     
     // trace ray
     int steps;
-    vec3 voxel = VoxelTrace(eye, dir, steps);
+    vec3 hitpos;
+    vec3 voxel = VoxelTrace(eye, dir, steps, hitpos);
     
     // background color
     if (voxel == vec3(0))
@@ -135,7 +158,7 @@ void main()
     vec3 albedo = Sample(voxel);
 
     // calc normals
-    vec3 normal = VoxelNormal(voxel);
+    vec3 normal = PerPixelNormal(voxel, hitpos);
 
     // define light
     vec3 lightdir = vec3(1, 0.6, 1);
@@ -153,8 +176,9 @@ void main()
     if (shadows)
     {
         int sdwsteps;
+        vec3 sdwhitpos;
         vec3 start = voxel + lightdir + (normal * shadowBias);
-        vec3 shadowVoxel = VoxelTrace(start, lightdir, sdwsteps);
+        vec3 shadowVoxel = VoxelTrace(start, lightdir, sdwsteps, sdwhitpos);
         if (shadowVoxel != vec3(0))
         {
             diffuse = 0;
