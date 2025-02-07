@@ -16,6 +16,7 @@ static class Program
     static FullscreenShader fb_fullscreenshader;
     static Framebuffer framebuffer;
 
+    static bool freecam = false;
     static bool firstMouseMovement = true;
     static Vector2 lastMousePos;
     static Vector2 camOrbitRotation;
@@ -72,7 +73,7 @@ static class Program
         timePassed += delta;
         frametimes.Add(delta);
 
-        ApplyInput();
+        ApplyInput(((float)args.Time));
         if (showSettings) SettingsWindow();
 
         framebuffer.Clear();
@@ -84,15 +85,16 @@ static class Program
         window.Context.SwapBuffers();
     }
 
-    static void ApplyInput()
+    static void ApplyInput(float deltaTime)
     {
         // start input
         var mouse = window.MouseState;
-        var input = window.KeyboardState;
+        var keyboard = window.KeyboardState;
+
         if (!window.IsFocused) return;
 
         // toggle settings
-        if (input.IsKeyPressed(Keys.F1)) showSettings = !showSettings;
+        if (keyboard.IsKeyPressed(Keys.F1)) showSettings = !showSettings;
 
         // voxel sculpting
         if (timePassed > sculptTick)
@@ -107,18 +109,44 @@ static class Program
             sculptTick += 1 / brushSpeed;
         }
 
-        // camera orbit movement
-        if (firstMouseMovement) firstMouseMovement = false;
-        else if (mouse.IsButtonDown(MouseButton.Right))
+        // toggle freecam
+        if (keyboard.IsKeyPressed(Keys.C)) freecam = !freecam;
+
+        // camera freecam movement
+        if (freecam)
         {
-            Vector2 mouseDelta = new Vector2(-(mouse.X - lastMousePos.X), mouse.Y - lastMousePos.Y);
-            camOrbitRotation += mouseDelta / 500;
-            if (camOrbitRotation.Y > MathHelper.DegreesToRadians(89)) camOrbitRotation.Y = MathHelper.DegreesToRadians(89);
-            if (camOrbitRotation.Y < MathHelper.DegreesToRadians(-89)) camOrbitRotation.Y = MathHelper.DegreesToRadians(-89);
+            float movespeed = 100;
+            float rotatespeed = 100;
+            if (firstMouseMovement) firstMouseMovement = false;
+            else if (mouse.IsButtonDown(MouseButton.Right))
+            {
+                Vector2 mouseDelta = new Vector2(-(mouse.X - lastMousePos.X), mouse.Y - lastMousePos.Y);
+                camera.Rotate(mouseDelta / 500 * rotatespeed / 100);
+            }
+            lastMousePos = new Vector2(mouse.X, mouse.Y);
+            if (keyboard.IsKeyDown(Keys.W)) camera.position += -camera.front * movespeed * deltaTime;
+            if (keyboard.IsKeyDown(Keys.A)) camera.position += -camera.right * movespeed * deltaTime;
+            if (keyboard.IsKeyDown(Keys.S)) camera.position += camera.front * movespeed * deltaTime;
+            if (keyboard.IsKeyDown(Keys.D)) camera.position += camera.right * movespeed * deltaTime;
+            if (keyboard.IsKeyDown(Keys.Space)) camera.position += camera.up * movespeed * deltaTime;
+            if (keyboard.IsKeyDown(Keys.LeftShift)) camera.position += -camera.up * movespeed * deltaTime;
         }
-        lastMousePos = new Vector2(mouse.X, mouse.Y);
-        cameraDistance -= mouse.ScrollDelta.Y * 10;
-        camera.RotateAround(voxeldata.size / 2, camOrbitRotation, cameraDistance);
+
+        // camera orbit movement
+        if (!freecam)
+        {
+            if (firstMouseMovement) firstMouseMovement = false;
+            else if (mouse.IsButtonDown(MouseButton.Right))
+            {
+                Vector2 mouseDelta = new Vector2(-(mouse.X - lastMousePos.X), mouse.Y - lastMousePos.Y);
+                camOrbitRotation += mouseDelta / 500;
+                if (camOrbitRotation.Y > MathHelper.DegreesToRadians(89)) camOrbitRotation.Y = MathHelper.DegreesToRadians(89);
+                if (camOrbitRotation.Y < MathHelper.DegreesToRadians(-89)) camOrbitRotation.Y = MathHelper.DegreesToRadians(-89);
+            }
+            lastMousePos = new Vector2(mouse.X, mouse.Y);
+            cameraDistance -= mouse.ScrollDelta.Y * 10;
+            camera.RotateAround(voxeldata.size / 2, camOrbitRotation, cameraDistance);
+        }
     }
 
     static void SetRayTracingUniforms()
