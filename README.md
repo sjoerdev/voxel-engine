@@ -1,4 +1,10 @@
 ## Sjoerd's Voxel Engine
+
+![lines](https://sloc.xyz/github/sjoerdev/voxel-engine/?lower=true)
+![stars](https://img.shields.io/github/stars/sjoerdev/voxel-engine?style=flat)
+![version](https://img.shields.io/github/v/release/sjoerdev/voxel-engine?include_prereleases)
+![license](https://img.shields.io/badge/license-MIT-blue.svg)
+
 This engine tries to ray-trace pure voxels as fast as possible without sacrificing dynamic geometry.
 
 ## Features:
