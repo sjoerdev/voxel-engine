@@ -15,4 +15,11 @@
     <PackageReference Include="OpenTK" Version="4.9.3" />
   </ItemGroup>
 
+  <!-- include resourcea -->
+  <ItemGroup>
+    <Content Include="res/**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
