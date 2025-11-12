@@ -24,7 +24,7 @@ This engine tries to ray-trace pure voxels as fast as possible without sacrifici
 
 ## Building:
 
-Download .NET 9: https://dotnet.microsoft.com/en-us/download
+Download .NET 10: https://dotnet.microsoft.com/en-us/download
 
 Building for Windows: ``dotnet publish -o ./build/windows --sc true -r win-x64 -c release``
 
