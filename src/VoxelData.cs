@@ -292,28 +292,32 @@ public class VoxelData
         return xIs && yIs && zIs;
     }
 
+    static Vector3i[] neighbourOffsets =
+    [
+        new(1, 0, 0),
+        new(-1, 0, 0),
+        new(0, 1, 0),
+        new(0, -1, 0),
+        new(0, 0, 1),
+        new(0, 0, -1),
+    ];
+
     public bool IsVoxelOnSurface(Vector3i pos)
     {
-        bool isOnSurface = 
-        TryGetVoxelValue(new Vector3i(pos.X + 1, pos.Y, pos.Z)) != Vector3.Zero ||
-        TryGetVoxelValue(new Vector3i(pos.X - 1, pos.Y, pos.Z)) != Vector3.Zero ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y + 1, pos.Z)) != Vector3.Zero ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y - 1, pos.Z)) != Vector3.Zero ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z + 1)) != Vector3.Zero ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z - 1)) != Vector3.Zero;
-        return isOnSurface;
+        foreach (var offset in neighbourOffsets)
+        {
+            if (TryGetVoxelValue(pos + offset) != Vector3.Zero) return true;
+        }
+        return false;
     }
 
     public bool IsVoxelSurface(Vector3i pos)
     {
-        bool isSurface = 
-        TryGetVoxelValue(new Vector3i(pos.X + 1, pos.Y, pos.Z)) == Vector3.Zero || 
-        TryGetVoxelValue(new Vector3i(pos.X - 1, pos.Y, pos.Z)) == Vector3.Zero ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y + 1, pos.Z)) == Vector3.Zero ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y - 1, pos.Z)) == Vector3.Zero ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z + 1)) == Vector3.Zero ||
-        TryGetVoxelValue(new Vector3i(pos.X, pos.Y, pos.Z - 1)) == Vector3.Zero;
-        return isSurface;
+        foreach (var offset in neighbourOffsets)
+        {
+            if (TryGetVoxelValue(pos + offset) == Vector3.Zero) return true;
+        }
+        return false;
     }
 
     public Vector3 TryGetVoxelValue(Vector3i pos)
