@@ -52,6 +52,105 @@ bool OutsideCanvas(vec3 coord)
     else return false;
 }
 
+vec3 VoxelTraceBranched(vec3 eye, vec3 dir, out int steps, out vec3 hitpos)
+{
+    vec3 stepsize = 1 / abs(dir);
+    vec3 toboundry;
+
+    if (dir.x < 0)
+    {
+        toboundry.x = (floor(eye.x / 1) * 1 - eye.x) / dir.x;
+    }
+    else
+    {
+        toboundry.x = ((floor(eye.x / 1) + 1) * 1 - eye.x) / dir.x;
+    }
+    if (dir.y < 0)
+    {
+        toboundry.y = (floor(eye.y / 1) * 1 - eye.y) / dir.y;
+    }
+    else
+    {
+        toboundry.y = ((floor(eye.y / 1) + 1) * 1 - eye.y) / dir.y;
+    }
+    if (dir.z < 0)
+    {
+        toboundry.z = (floor(eye.z / 1) * 1 - eye.z) / dir.z;
+    }
+    else
+    {
+        toboundry.z = ((floor(eye.z / 1) + 1) * 1 - eye.z) / dir.z;
+    }
+
+    // initializing some variables
+    float totaldist = 0;
+    vec3 voxel = floor(eye);
+    vec3 result;
+
+    // tracing the grid
+    while (true)
+    {
+        // increment step
+        if (toboundry.x < toboundry.y)
+        {
+            if (toboundry.x < toboundry.z)
+            {
+                totaldist = toboundry.x;
+                toboundry.x += stepsize.x;
+                if (dir.x < 0) voxel.x -= 1;
+                else voxel.x += 1;
+            }
+            else
+            {
+                totaldist = toboundry.z;
+                toboundry.z += stepsize.z;
+                if (dir.z < 0) voxel.z -= 1;
+                else voxel.z += 1;
+            }
+        }
+        else
+        {
+            if (toboundry.y < toboundry.z)
+            {
+                totaldist = toboundry.y;
+                toboundry.y += stepsize.y;
+                if (dir.y < 0) voxel.y -= 1;
+                else voxel.y += 1;
+            }
+            else
+            {
+                totaldist = toboundry.z;
+                toboundry.z += stepsize.z;
+                if (dir.z < 0) voxel.z -= 1;
+                else voxel.z += 1;
+            }
+        }
+
+        steps++;
+
+        bool hit = Sample(voxel) != vec3(0);
+        bool toofar = steps > maxsteps;
+        bool outside = canvasCheck && OutsideCanvas(voxel);
+
+        // if voxel is found
+        if (hit)
+        {
+            result = voxel;
+            hitpos = eye + totaldist * dir; // todo: this is completely wrong
+            break;
+        }
+
+        // if no voxel was hit or voxel is outside the canvas
+        if (toofar || outside)
+        {
+            result = vec3(0);
+            break;
+        }
+    }
+
+    return result;
+}
+
 vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps, out vec3 hitpos)
 {
     vec3 result;
@@ -61,7 +160,7 @@ vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps, out vec3 hitpos)
 
     while (true)
     {
-        float tStep = min(toboundry.x, min(toboundry.y, toboundry.z));
+        float totaldist = min(toboundry.x, min(toboundry.y, toboundry.z));
         bvec3 mask = lessThanEqual(toboundry, min(toboundry.yzx, toboundry.zxy));
         toboundry += vec3(mask) * stepsize;
         voxel += ivec3(vec3(mask)) * ivec3(sign(dir));
@@ -75,7 +174,7 @@ vec3 VoxelTrace(vec3 eye, vec3 dir, out int steps, out vec3 hitpos)
         if (hit)
         {
             result = voxel;
-            hitpos = eye + tStep * dir;
+            hitpos = eye + totaldist * dir;
         }
         if (toofar || outside) result = vec3(0);
         if (anything) break;
