@@ -54,38 +54,11 @@ bool OutsideCanvas(vec3 coord)
 
 vec3 VoxelTraceBranched(vec3 eye, vec3 dir, out int steps, out vec3 hitpos)
 {
-    vec3 stepsize = 1 / abs(dir);
-    vec3 toboundry;
-
-    if (dir.x < 0)
-    {
-        toboundry.x = (floor(eye.x / 1) * 1 - eye.x) / dir.x;
-    }
-    else
-    {
-        toboundry.x = ((floor(eye.x / 1) + 1) * 1 - eye.x) / dir.x;
-    }
-    if (dir.y < 0)
-    {
-        toboundry.y = (floor(eye.y / 1) * 1 - eye.y) / dir.y;
-    }
-    else
-    {
-        toboundry.y = ((floor(eye.y / 1) + 1) * 1 - eye.y) / dir.y;
-    }
-    if (dir.z < 0)
-    {
-        toboundry.z = (floor(eye.z / 1) * 1 - eye.z) / dir.z;
-    }
-    else
-    {
-        toboundry.z = ((floor(eye.z / 1) + 1) * 1 - eye.z) / dir.z;
-    }
-
-    // initializing some variables
-    float totaldist = 0;
-    vec3 voxel = floor(eye);
     vec3 result;
+    vec3 stepsize = 1 / abs(dir);
+    vec3 toboundry = (sign(dir) * 0.5 + 0.5 - fract(eye)) / dir;
+    vec3 voxel = floor(eye);
+    float totaldist;
 
     // tracing the grid
     while (true)
