@@ -190,95 +190,77 @@ public class VoxelData
         AmbientOcclusion.CalcChanged(this, voxelsToChange, corner);
     }
 
-    public Vector3i VoxelTrace(Vector3 pos, Vector3 dir, int maxSteps)
+    public Vector3i VoxelTrace(Vector3 eye, Vector3 dir, int maxSteps)
     {
-        Vector3 tdelta;
-        float tx, ty, tz;
-
-        if (dir.X < 0)
-        {
-            tdelta.X = -1 / dir.X;
-            tx = (MathF.Floor(pos.X / 1) * 1 - pos.X) / dir.X;
-        }
-        else 
-        {
-            tdelta.X = 1 / dir.X;
-            tx = ((MathF.Floor(pos.X / 1) + 1) * 1 - pos.X) / dir.X;
-        }
-        if (dir.Y < 0)
-        {
-            tdelta.Y = -1 / dir.Y;
-            ty = (MathF.Floor(pos.Y / 1) * 1 - pos.Y) / dir.Y;
-        }
-        else 
-        {
-            tdelta.Y = 1 / dir.Y;
-            ty = ((MathF.Floor(pos.Y / 1) + 1) * 1 - pos.Y) / dir.Y;
-        }
-        if (dir.Z < 0)
-        {
-            tdelta.Z = -1 / dir.Z;
-            tz = (MathF.Floor(pos.Z / 1) * 1 - pos.Z) / dir.Z;
-        }
-        else
-        {
-            tdelta.Z = 1 / dir.Z;
-            tz = ((MathF.Floor(pos.Z / 1) + 1) * 1 - pos.Z) / dir.Z;
-        }
-
-        Vector3i coord = (Vector3i)pos;
-        float steps = 0;
+        int steps = default;
+        Vector3 hitpos = default;
+        
         Vector3i result;
+        Vector3 stepsize = Vector3.One / Vector3.Abs(dir);
+        Vector3 toboundry = new Vector3
+        (
+            (dir.X < 0 ? eye.X % 1 : 1 - eye.X % 1) / dir.X,
+            (dir.Y < 0 ? eye.Y % 1 : 1 - eye.Y % 1) / dir.Y,
+            (dir.Z < 0 ? eye.Z % 1 : 1 - eye.Z % 1) / dir.Z
+        );
+        Vector3i voxel = (Vector3i)eye;
+        float totaldist;
 
         // tracing through the grid
         while (true)
         {
-            // voxel is hit
-            if (IsInBounds(coord, array) && array[coord.X, coord.Y, coord.Z] != Vector3.Zero)
+            // increment step
+            if (toboundry.X < toboundry.Y)
             {
-                result = coord;
+                if (toboundry.X < toboundry.Z)
+                {
+                    totaldist = toboundry.X;
+                    toboundry.X += stepsize.X;
+                    if (dir.X < 0) voxel.X -= 1;
+                    else voxel.X += 1;
+                }
+                else
+                {
+                    totaldist = toboundry.Z;
+                    toboundry.Z += stepsize.Z;
+                    if (dir.Z < 0) voxel.Z -= 1;
+                    else voxel.Z += 1;
+                }
+            }
+            else
+            {
+                if (toboundry.Y < toboundry.Z)
+                {
+                    totaldist = toboundry.Y;
+                    toboundry.Y += stepsize.Y;
+                    if (dir.Y < 0) voxel.Y -= 1;
+                    else voxel.Y += 1;
+                }
+                else
+                {
+                    totaldist = toboundry.Z;
+                    toboundry.Z += stepsize.Z;
+                    if (dir.Z < 0) voxel.Z -= 1;
+                    else voxel.Z += 1;
+                }
+            }
+
+            steps++;
+
+            // voxel is hit
+            if (IsInBounds(voxel, array) && array[voxel.X, voxel.Y, voxel.Z] != Vector3.Zero)
+            {
+                result = voxel;
+                hitpos = eye + totaldist * dir;
                 break;
             }
 
             // no voxel was hit
             if (steps > maxSteps)
             {
-                result = new Vector3i();
+                result = Vector3i.Zero;
                 break;
             }
-
-            // increment step
-            if (tx < ty)
-            {
-                if (tx < tz)
-                {
-                    tx += tdelta.X;
-                    if (dir.X < 0) coord.X -= 1;
-                    else coord.X += 1;
-                }
-                else
-                {
-                    tz += tdelta.Z;
-                    if (dir.Z < 0) coord.Z -= 1;
-                    else coord.Z += 1;
-                }
-            }
-            else
-            {
-                if (ty < tz)
-                {
-                    ty += tdelta.Y;
-                    if (dir.Y < 0) coord.Y -= 1;
-                    else coord.Y += 1;
-                }
-                else
-                {
-                    tz += tdelta.Z;
-                    if (dir.Z < 0) coord.Z -= 1;
-                    else coord.Z += 1;
-                }
-            }
-            steps++;
         }
 
         return result;

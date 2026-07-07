@@ -109,7 +109,7 @@ vec3 VoxelTraceBranched(vec3 eye, vec3 dir, out int steps, out vec3 hitpos)
         if (hit)
         {
             result = voxel;
-            hitpos = eye + totaldist * dir; // todo: this is completely wrong
+            hitpos = eye + totaldist * dir;
             break;
         }
 
