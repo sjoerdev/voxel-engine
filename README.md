@@ -26,7 +26,7 @@ This engine tries to ray-trace pure voxels as fast as possible without sacrifici
 <img width="720" src="https://github.com/user-attachments/assets/f84cac27-800a-49a6-bd16-bb4c33ca6244">
 
 ## System Requirements:
-- Visual C++ Redistributable ([Download](https://aka.ms/vs/17/release/vc_redist.x64.exe))
+- Visual C++ Redistributable ([Download](https://aka.ms/vc14/vc_redist.x64.exe))
 
 ## Building:
 
